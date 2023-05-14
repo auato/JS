@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Controllo disponibilità denaro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      #myChart {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Controllo disponibilità denaro</h1>
+    <form>
+      <label for="importo">Importo prelevato (in euro):</label>
+      <input type="number" id="importo" name="importo" required><br>
+
+      <label for="data-prelievo">Data del prelievo:</label>
+      <input type="date" id="data-prelievo" name="data-prelievo" required><br>
+
+      <label for="data-attuale">Data attuale:</label>
+      <input type="date" id="data-attuale" name="data-attuale" required><br>
+
+      <label for="disponibilita">Somma ancora disponibile (in euro):</label>
+      <input type="number" id="disponibilita" name="disponibilita" required><br>
+
+      <label for="data-finale">Data entro cui i soldi dovrebbero bastare:</label>
+      <input type="date" id="data-finale" name="data-finale" required><br>
+
+      <button type="button" onclick="controllaDisponibilita()">Controlla disponibilità</button>
+    </form>
+    <canvas id="myChart" width="400"></canvas>
+    <div>
+      <p id="risultato"></p>
+      <p id="printoutHTML"></p>
+    </div>
+
+
+<script>
+function controllaDisponibilita() {
+  // Recupera i valori inseriti dall'utente
+  const importo = document.getElementById("importo").value;
+  const dataPrelievo = new Date(
+    document.getElementById("data-prelievo").value
+  );
+  const disponibilita = document.getElementById("disponibilita").value;
+  const dataFinale = new Date(document.getElementById("data-finale").value);
+  const datprintoutHTMLttuale = new Date(document.getElementById("data-attuale").value);
+
+  // Calcola i giorni trascorsi dal prelievo alla data finale (Teorico)
+  const giorniTrascorsiTeorico = Math.round(
+    (dataFinale - dataPrelievo) / (1000 * 60 * 60 * 24)
+  );
+
+    // Calcola i giorni trascorsi dal prelievo alla data attuale (Reale)
+  const giorniTrascorsiReale = Math.round(
+    (datprintoutHTMLttuale - dataPrelievo) / (1000 * 60 * 60 * 24)
+  );
+
+  // Calcola se in base alla spesa media giornaliera, con l'attuale somma disponibile ce la faremo (il calcolo e' errato o non ha senso)
+  const sommaFinale =
+    parseInt(disponibilita) -
+    parseInt(importo) +
+    giorniTrascorsiTeorico * 0.5;
+
+ 
+  // Controlla se la somma finale è sufficiente per coprire le spese fino alla data finale
+  const risultato =
+    sommaFinale >= 0
+      ? "Sei in linea con la tabella di marcia."
+      : "Attenzione, i soldi prelevati potrebbero non essere sufficienti fino alla data finale.";
+
+  // Scrivi il risultato sulla pagina HTML
+  document.getElementById("risultato").innerHTML = risultato;
+
+// Crea il grafico
+
+const labels = [];
+const Teorico = [];
+const Reale = [];
+
+const giorniTotaliTeorico = giorniTrascorsiTeorico + 1;
+
+let somma = parseInt(importo);
+let dataCorrente = dataPrelievo;
+const dataCorrenteformatted = dataCorrente.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+
+for (let i = 0; i < giorniTotaliTeorico; i++) {
+  const formattedDate = dataCorrente.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  labels.push(formattedDate);
+  
+  // Teorico
+  const TeoricoValue = parseInt(importo) - i * (parseInt(importo) / giorniTrascorsiTeorico);
+  Teorico.push(TeoricoValue);
+  
+  // Reale
+  const RealeValue = parseInt(importo) - i * ((parseInt(importo)-parseInt(disponibilita)) / giorniTrascorsiReale);
+  Reale.push(RealeValue);
+  
+  // Increment the date by one day
+  dataCorrente.setDate(dataCorrente.getDate() + 1);
+}
+  //estrae il valore minimo dall'array Teorico e da Reale e poi seleziona il minimo tra i due
+  const minValueTeorico = Math.min(...Teorico);
+  const minValueReale = Math.min(...Reale);
+  const minValue = minValueTeorico <= minValueReale ? minValueTeorico : minValueReale;
+
+  document.getElementById("printoutHTML").innerHTML = giorniTrascorsiReale;
+
+const ctx = document.getElementById("myChart").getContext("2d");
+const chart = new Chart(ctx, {
+  type: "line",
+  data: {
+    labels: labels,
+    datasets: [
+      {
+        label: "Teorico",
+        data: Teorico,
+        fill: false,
+        //backgroundColor: "rgb(75, 192, 192)",
+        borderColor: "rgb(75, 192, 192)",
+        //Color: "rgb(75, 192, 192)",
+        tension: 0.1,
+      },
+      {
+        label: "Reale",
+        data: Reale,
+        fill: false,
+        //backgroundColor: "rgb(192, 75, 75)",
+        borderColor: "rgb(192, 75, 75)",
+        //Color: "rgb(192, 75, 75)",
+        tension: 0.1,
+      },
+    
+{
+  label: 'Data attuale', 
+  type: 'bar',
+  data: [
+    { x: 'May 13', y: [minValue, somma] }
+  ],
+  maxBarThickness: 2,
+  backgroundColor: 'purple'
+}
+
+
+
+
+    ],
+  },
+  options: {
+    scales: {
+      x: {
+        display: true,
+        title: {
+          display: true
+        },
+      },
+      y: {
+        display: true,
+        title: {
+          display: true,
+          text: "€",
+        },
+        suggestedMax: parseInt(importo),
+      },
+    },
+  },
+
+
+
+
+});
+
+
+}
+
+
+    </script>
+  </body>
+</html>
