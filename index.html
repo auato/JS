@@ -3,11 +3,14 @@
   <head>
     <title>Controllo disponibilità denaro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2/dist/chartjs-plugin-annotation.min.js"></script>
     <style>
       #myChart {
-        max-width: 600px;
+        width: 800px;
+        height: 400px;
         margin: 0 auto;
       }
+    </style>
     </style>
   </head>
   <body>
@@ -46,7 +49,7 @@ function controllaDisponibilita() {
   );
   const disponibilita = document.getElementById("disponibilita").value;
   const dataFinale = new Date(document.getElementById("data-finale").value);
-  const datprintoutHTMLttuale = new Date(document.getElementById("data-attuale").value);
+  const dataPintoutHtmlAttuale = new Date(document.getElementById("data-attuale").value);
 
   // Calcola i giorni trascorsi dal prelievo alla data finale (Teorico)
   const giorniTrascorsiTeorico = Math.round(
@@ -55,7 +58,7 @@ function controllaDisponibilita() {
 
     // Calcola i giorni trascorsi dal prelievo alla data attuale (Reale)
   const giorniTrascorsiReale = Math.round(
-    (datprintoutHTMLttuale - dataPrelievo) / (1000 * 60 * 60 * 24)
+    (dataPintoutHtmlAttuale - dataPrelievo) / (1000 * 60 * 60 * 24)
   );
 
   // Calcola se in base alla spesa media giornaliera, con l'attuale somma disponibile ce la faremo (il calcolo e' errato o non ha senso)
@@ -84,7 +87,7 @@ const giorniTotaliTeorico = giorniTrascorsiTeorico + 1;
 
 let somma = parseInt(importo);
 let dataCorrente = dataPrelievo;
-const dataCorrenteformatted = dataCorrente.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
 
 
 for (let i = 0; i < giorniTotaliTeorico; i++) {
@@ -107,7 +110,8 @@ for (let i = 0; i < giorniTotaliTeorico; i++) {
   const minValueReale = Math.min(...Reale);
   const minValue = minValueTeorico <= minValueReale ? minValueTeorico : minValueReale;
 
-  document.getElementById("printoutHTML").innerHTML = giorniTrascorsiReale;
+//formatta la data attuale allo stesso modo delle date formattate sull'asse x del grafico per posizionare la linea verticale 
+  let today = dataPintoutHtmlAttuale.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 const ctx = document.getElementById("myChart").getContext("2d");
 const chart = new Chart(ctx, {
@@ -138,7 +142,7 @@ const chart = new Chart(ctx, {
   label: 'Data attuale', 
   type: 'bar',
   data: [
-    { x: 'May 13', y: [minValue, somma] }
+    { x: today, y: [minValue, somma] }
   ],
   maxBarThickness: 2,
   backgroundColor: 'purple'
@@ -150,6 +154,7 @@ const chart = new Chart(ctx, {
     ],
   },
   options: {
+    plugins: ['annotation'],  //plugin di annotazione per gridline allo 0
     scales: {
       x: {
         display: true,
@@ -166,6 +171,24 @@ const chart = new Chart(ctx, {
         suggestedMax: parseInt(importo),
       },
     },
+  
+//inizio annotazione per gridline allo 0 
+plugins: {
+    annotation: {
+      annotations: [
+        {
+          type: 'line',
+          mode: 'horizontal',
+          scaleID: 'y',
+          value: 0,
+          borderColor: '#D3D3D3',
+          borderWidth: 2,
+          //borderDash: [5, 5],
+        },
+      ],
+    },
+  },
+//fine annotazione
   },
 
 
@@ -176,7 +199,9 @@ const chart = new Chart(ctx, {
 
 }
 
+  document.getElementById("printoutHTML").innerHTML = zeroLine;
 
     </script>
   </body>
 </html>
+
