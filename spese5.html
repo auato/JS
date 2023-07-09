@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calcolatore saldo progressivo</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Calcolatore saldo progressivo</h1>
+    <form>
+        <label for="saldo-iniziale">Saldo iniziale:</label>
+        <input type="number" id="saldo-iniziale" name="saldo-iniziale"><br>
+
+        <label for="Entry">Entry (+/-)-->:</label>
+        <input type="number" id="nuova-spesa" name="nuova-spesa">
+        <label for="nota-spesa">Nota:</label>
+        <input type="text" id="nota-spesa" name="nota-spesa">
+        <button type="button" onclick="aggiungiSpesa()">Aggiungi</button><br>
+
+        <ul id="entrate"></ul>
+        <ul id="spese"></ul>
+    </form>
+
+    <p>Saldo progressivo: <span id="saldo-progressivo"></span></p>
+
+    <script>
+        // Inizializza gli array di entrate e spese
+        var entrate = [];
+        var spese = [];
+
+        // Aggiunge una nuova spesa o entrata all'array corrispondente e mostra l'elenco aggiornato
+        function aggiungiSpesa() {
+            var nuovaSpesa = parseFloat(document.getElementById("nuova-spesa").value);
+            var notaSpesa = document.getElementById("nota-spesa").value;
+            if (nuovaSpesa >= 0) {
+                // Aggiungi l'entrata all'array delle entrate
+                entrate.push({ importo: nuovaSpesa, nota: notaSpesa });
+                var entrateList = document.getElementById("entrate");
+                var listItem = document.createElement("li");
+                var listItemText = document.createTextNode(nuovaSpesa + " (" + notaSpesa + ")");
+                listItem.appendChild(listItemText);
+                entrateList.appendChild(listItem);
+            } else {
+                // Aggiungi la spesa all'array delle spese
+                spese.push({ importo: -nuovaSpesa, nota: notaSpesa });
+                var speseList = document.getElementById("spese");
+                var listItem = document.createElement("li");
+                var listItemText = document.createTextNode(-nuovaSpesa + " (" + notaSpesa + ")");
+                listItem.appendChild(listItemText);
+                speseList.appendChild(listItem);
+            }
+            document.getElementById("nuova-spesa").value = "";
+            document.getElementById("nota-spesa").value = "";
+
+            // Calcola il saldo progressivo e lo mostra all'utente
+            var saldoIniziale = parseFloat(document.getElementById("saldo-iniziale").value);
+            var saldoProgressivo = saldoIniziale;
+            for (var i = 0; i < spese.length; i++) {
+                saldoProgressivo -= spese[i].importo;
+            }
+            for (var i = 0; i < entrate.length; i++) {
+                saldoProgressivo += entrate[i].importo;
+            }
+            document.getElementById("saldo-progressivo").textContent = saldoProgressivo;
+        }
+    </script>
+</body>
+</html>
