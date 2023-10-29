@@ -11,7 +11,7 @@
         <label for="saldo-iniziale">Saldo iniziale:</label>
         <input type="number" id="saldo-iniziale" name="saldo-iniziale"><br>
 
-        <label for="Entry">Spesa:</label>
+        <label for="Entry">Input(+/-):</label>
         <input type="text" id="nuova-spesa" name="nuova-spesa">
         <label for="nota-spesa">Nota:</label>
         <input type="text" id="nota-spesa" name="nota-spesa">
@@ -55,7 +55,8 @@
                 entrate.push({ importo: nuovaSpesaValue, nota: notaSpesa, data: dataSpesa });
                 var entrateList = document.getElementById("entrate");
                 var listItem = document.createElement("li");
-                var listItemText = document.createTextNode(nuovaSpesaValue + " (" + notaSpesa + ") - " + dataSpesa);
+                var saldoProgressivo = calcolaSaldoProgressivo(entrate, spese, parseFloat(document.getElementById("saldo-iniziale").value));
+                var listItemText = document.createTextNode(nuovaSpesaValue + " (" + notaSpesa + ") - " + dataSpesa + " - Saldo: " + saldoProgressivo);
                 listItem.appendChild(listItemText);
                 entrateList.appendChild(listItem);
             } else {
@@ -63,7 +64,8 @@
                 spese.push({ importo: -nuovaSpesaValue, nota: notaSpesa, data: dataSpesa });
                 var speseList = document.getElementById("spese");
                 var listItem = document.createElement("li");
-                var listItemText = document.createTextNode(-nuovaSpesaValue + " (" + notaSpesa + ") - " + dataSpesa);
+                var saldoProgressivo = calcolaSaldoProgressivo(entrate, spese, parseFloat(document.getElementById("saldo-iniziale").value));
+                var listItemText = document.createTextNode(-nuovaSpesaValue + " (" + notaSpesa + ") - " + dataSpesa + " - Saldo: " + saldoProgressivo);
                 listItem.appendChild(listItemText);
                 speseList.appendChild(listItem);
             }
@@ -71,8 +73,13 @@
             document.getElementById("nota-spesa").value = "";
             document.getElementById("data-spesa").value = "";
 
-            // Calcola il saldo progressivo e lo mostra all'utente
-            var saldoIniziale = parseFloat(document.getElementById("saldo-iniziale").value);
+            // Aggiorna il saldo progressivo e lo mostra all'utente
+            var saldoProgressivo = calcolaSaldoProgressivo(entrate, spese, parseFloat(document.getElementById("saldo-iniziale").value));
+            document.getElementById("saldo-progressivo").textContent = saldoProgressivo;
+        }
+
+        // Funzione per calcolare il saldo progressivo
+        function calcolaSaldoProgressivo(entrate, spese, saldoIniziale) {
             var saldoProgressivo = saldoIniziale;
             for (var i = 0; i < spese.length; i++) {
                 saldoProgressivo -= spese[i].importo;
@@ -80,7 +87,7 @@
             for (var i = 0; i < entrate.length; i++) {
                 saldoProgressivo += entrate[i].importo;
             }
-            document.getElementById("saldo-progressivo").textContent = saldoProgressivo;
+            return saldoProgressivo;
         }
     </script>
 </body>
