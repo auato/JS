@@ -76,15 +76,12 @@
 
             let [ore, minuti] = orarioInizio.split(':').map(Number);
 
-            // Controlla se l'orario è nel range 07:00 - 09:00
             if (ore < 7 || ore > 9 || (ore === 9 && minuti > 0)) {
                 return "<span class='warning'>Orario non valido! Inserisci un orario tra 07:00 e 09:00.</span>";
             }
 
             let inizioTurno = new Date();
             inizioTurno.setHours(ore, minuti, 0, 0);
-
-            // Aggiunge 7 ore e 42 minuti + eventuali minuti aggiuntivi
             inizioTurno.setMinutes(inizioTurno.getMinutes() + (7 * 60 + 42 + minutiAggiuntivi));
 
             let oreUscita = inizioTurno.getHours().toString().padStart(2, '0');
@@ -93,11 +90,17 @@
             return `<span class='bold'>${oreUscita}:${minutiUscita}</span>`;
         }
 
-        document.getElementById("calcola").addEventListener("click", function() {
-            console.log("Bottone cliccato!");
-            let orarioInizio = document.getElementById("orarioInizio").value;
-            console.log("Orario selezionato:", orarioInizio);
+        document.addEventListener("DOMContentLoaded", function() {
+            let orarioSalvato = localStorage.getItem("orarioInizio");
+            if (orarioSalvato) {
+                document.getElementById("orarioInizio").value = orarioSalvato;
+            }
+        });
 
+        document.getElementById("calcola").addEventListener("click", function() {
+            let orarioInizio = document.getElementById("orarioInizio").value;
+            localStorage.setItem("orarioInizio", orarioInizio);
+            
             if (!orarioInizio) {
                 document.getElementById("messaggio").innerHTML = "<span class='error'>Seleziona un orario!</span>";
                 document.getElementById("risultato").innerHTML = "";
