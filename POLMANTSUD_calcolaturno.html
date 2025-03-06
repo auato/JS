@@ -42,6 +42,10 @@
             font-size: 18px;
             margin-top: 10px;
         }
+        .nota {
+            font-size: 12px;
+            color: lightgray;
+        }
         .bold {
             font-weight: bold;
         }
@@ -62,6 +66,7 @@
         <h2>Calcola Orario di Uscita</h2>
         <label for="orarioInizio">Orario di Inizio (07:00 - 09:00):</label>
         <input type="time" id="orarioInizio" min="07:00" max="09:00">
+        <p class="nota">(*mantiene in memoria il dato immesso finché non cambiato)</p>
         <button id="calcola">Calcola</button>
         <p id="messaggio"></p>
         <p id="risultato"></p>
