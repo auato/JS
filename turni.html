@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestione Turni Viaggio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      color: white;
+      text-align: center;
+      padding: 50px;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    .turno {
+      margin-bottom: 5px;
+    }
+    .bold {
+      font-weight: bold;
+      color: #00ff00;
+    }
+    .prossimo {
+      font-weight: bold;
+      color: darkred;
+    }
+    h2, h3 {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+    }
+    #avvisoImpossibilitato {
+      margin-top: 10px;
+      font-style: italic;
+      color: yellow;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Gestione Turni di Viaggio</h2>
+    <div class="output" id="risultato">
+      <h3>Turni della settimana scorsa:</h3>
+      <div id="turniPassati"></div>
+
+      <h3>Proiezione della settimana prossima:</h3>
+      <div id="proiezione"></div>
+      <div id="controlloCheckbox"></div>
+      <div id="avvisoImpossibilitato"></div>
+    </div>
+  </div>
+
+ <script>
+  const ordine = ["Pasquale", "Ciro", "Pietro", "Enrico"];
+  const dateInizio = new Date("2025-04-28"); // Lunedì della scorsa settimana
+
+  function getGiornoSettimana(data) {
+    const giorniSettimana = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+    return giorniSettimana[data.getDay()];
+  }
+
+  function generaProiezioneCustom(priorità) {
+    const dataProssimoLunedi = new Date(dateInizio);
+    dataProssimoLunedi.setDate(dateInizio.getDate() + 7);
+
+    let nuovaProiezione = [];
+    for (let i = 0; i < 5; i++) {
+      const data = new Date(dataProssimoLunedi);
+      data.setDate(dataProssimoLunedi.getDate() + i);
+      const giorno = String(data.getDate()).padStart(2, '0');
+      const mese = String(data.getMonth() + 1).padStart(2, '0');
+      const anno = data.getFullYear();
+      const giornoSettimana = getGiornoSettimana(data);
+      const dataStr = `${giorno}/${mese}/${anno} (${giornoSettimana})`;
+      const classe = i === 0 ? 'bold' : '';
+      nuovaProiezione.push(`<div class="turno ${classe}">${dataStr} - ${priorità[i % priorità.length]}</div>`);
+    }
+    return nuovaProiezione.join("");
+  }
+
+  function calcolaTurno() {
+    const turniPassatiDiv = document.getElementById("turniPassati");
+    const controlloCheckbox = document.getElementById("controlloCheckbox");
+    const proiezioneDiv = document.getElementById("proiezione");
+    const avvisoDiv = document.getElementById("avvisoImpossibilitato");
+
+    turniPassatiDiv.innerHTML = "";
+    controlloCheckbox.innerHTML = "";
+    proiezioneDiv.innerHTML = "";
+    avvisoDiv.innerHTML = "";
+
+    let partenza = ordine.indexOf("Enrico");
+    for (let i = 0; i < 5; i++) {
+      const data = new Date(dateInizio);
+      data.setDate(dateInizio.getDate() + i);
+      const giorno = String(data.getDate()).padStart(2, '0');
+      const mese = String(data.getMonth() + 1).padStart(2, '0');
+      const anno = data.getFullYear();
+      const giornoSettimana = getGiornoSettimana(data);
+      const dataStr = `${giorno}/${mese}/${anno} (${giornoSettimana})`;
+      const nome = ordine[(partenza + i) % ordine.length];
+      turniPassatiDiv.innerHTML += `<div class="turno">${dataStr} - ${nome}</div>`;
+    }
+
+    const indiceInizio = (partenza + 5) % ordine.length;
+    const primo = ordine[indiceInizio];
+    const secondo = ordine[(indiceInizio + 1) % ordine.length];
+
+    controlloCheckbox.innerHTML = `
+      <p><strong>${primo} è impossibilitato a fare il turno?</strong></p>
+      <label><input type="checkbox" id="chk1"> Sì, è impossibilitato</label>
+      <div id="secondoControllo" style="display:none;">
+        <p><strong>${secondo} è impossibilitato a fare il turno?</strong></p>
+        <label><input type="checkbox" id="chk2"> Sì, è impossibilitato</label>
+      </div>
+    `;
+
+    // Proiezione iniziale
+    proiezioneDiv.innerHTML = generaProiezioneCustom([
+      ...ordine.slice(indiceInizio),
+      ...ordine.slice(0, indiceInizio)
+    ]);
+
+    document.getElementById("chk1").addEventListener("change", function () {
+      const chk2Container = document.getElementById("secondoControllo");
+      const chk2 = document.getElementById("chk2");
+
+      if (this.checked) {
+        chk2Container.style.display = "block";
+        avvisoDiv.innerHTML = `${primo} è impossibilitato a fare il turno.`;
+
+        // Se secondo NON impossibilitato
+        if (!chk2.checked) {
+          const lista = [
+            secondo,
+            primo,
+            ...ordine.filter(x => x !== primo && x !== secondo)
+          ];
+          proiezioneDiv.innerHTML = generaProiezioneCustom(lista);
+        }
+      } else {
+        chk2Container.style.display = "none";
+        chk2.checked = false;
+        avvisoDiv.innerHTML = "";
+        proiezioneDiv.innerHTML = generaProiezioneCustom([
+          ...ordine.slice(indiceInizio),
+          ...ordine.slice(0, indiceInizio)
+        ]);
+      }
+
+      chk2.addEventListener("change", function () {
+        if (this.checked) {
+          avvisoDiv.innerHTML = `${primo} e ${secondo} sono impossibilitati a fare il turno.`;
+          const successivi = ordine.filter(x => x !== primo && x !== secondo);
+          const lista = [
+            successivi[0],
+            primo,
+            secondo,
+            successivi[1]
+          ];
+          proiezioneDiv.innerHTML = generaProiezioneCustom(lista);
+        } else {
+          avvisoDiv.innerHTML = `${primo} è impossibilitato a fare il turno.`;
+          const lista = [
+            secondo,
+            primo,
+            ...ordine.filter(x => x !== primo && x !== secondo)
+          ];
+          proiezioneDiv.innerHTML = generaProiezioneCustom(lista);
+        }
+      });
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', calcolaTurno);
+</script>
+
+</body>
+</html>
