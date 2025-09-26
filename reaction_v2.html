@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Allenamento Tempi di Reazione</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+    #colorBox {
+      width: 200px;
+      height: 200px;
+      background-color: white;
+      border: 3px solid #333;
+      margin-bottom: 20px;
+      transition: background-color 0.2s;
+    }
+    .buttons {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 20px;
+    }
+    .circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+      font-weight: bold;
+    }
+    .red {
+      background-color: red;
+    }
+    .green {
+      background-color: green;
+    }
+    #results {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 150px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    #results h3 {
+      margin-top: 0;
+      text-align: center;
+    }
+    #results ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #results li {
+      text-align: center;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="colorBox"></div>
+  <div class="buttons">
+    <div class="circle red">Z</div>
+    <div class="circle green">M</div>
+  </div>
+  <div id="results">
+    <h3>Ultimi 5</h3>
+    <ul id="resultsList"></ul>
+  </div>
+
+  <script>
+    const colorBox = document.getElementById('colorBox');
+    const resultsList = document.getElementById('resultsList');
+
+    let startTime = null;
+    let activeColor = null;
+    let results = [];
+    let waiting = false;
+
+    function startRound() {
+      colorBox.style.backgroundColor = 'white';
+      activeColor = null;
+      waiting = true;
+
+      const delay = Math.random() * 2500 + 500; // tempo casuale 0.5-3s
+      setTimeout(() => {
+        activeColor = Math.random() < 0.5 ? 'red' : 'green';
+        colorBox.style.backgroundColor = activeColor;
+        startTime = performance.now();
+        waiting = false;
+      }, delay);
+    }
+
+    function handleKeyPress(e) {
+      if (waiting) return;
+
+      if (e.code === 'Space') {
+        startRound();
+      }
+
+      if (startTime && (e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'm')) {
+        if ((e.key.toLowerCase() === 'z' && activeColor === 'red') ||
+            (e.key.toLowerCase() === 'm' && activeColor === 'green')) {
+          const reactionTime = (performance.now() - startTime) / 1000;
+          results.unshift(reactionTime.toFixed(3));
+          results = results.slice(0, 5);
+          updateResults();
+          colorBox.style.backgroundColor = 'white';
+          activeColor = null;
+          startTime = null;
+        }
+      }
+    }
+
+    function updateResults() {
+      resultsList.innerHTML = '';
+      results.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = r + 's';
+        resultsList.appendChild(li);
+      });
+    }
+
+    document.addEventListener('keydown', handleKeyPress);
+  </script>
+</body>
+</html>
