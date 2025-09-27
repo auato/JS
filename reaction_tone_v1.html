@@ -16,6 +16,20 @@
       background-color: #f4f4f4;
       touch-action: manipulation;
     }
+    #soundBox {
+      width: 60vw;
+      max-width: 300px;
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      background-color: white;
+      border: 3px solid #333;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      user-select: none;
+    }
     .buttons {
       display: flex;
       gap: 100px;
@@ -88,6 +102,8 @@
     <button id="stopBtn">Stop</button>
   </div>
 
+  <div id="soundBox">🔊</div>
+
   <div class="buttons">
     <div class="circle red" id="redBtn">Z</div>
     <div class="circle green" id="greenBtn">M</div>
@@ -100,6 +116,7 @@
   </div>
 
   <script>
+    const soundBox = document.getElementById('soundBox');
     const resultsList = document.getElementById('resultsList');
     const averageDiv = document.getElementById('average');
     const startBtn = document.getElementById('startBtn');
@@ -135,9 +152,11 @@
         activeColor = Math.random() < 0.5 ? 'red' : 'green';
         startTime = performance.now();
         waiting = false;
-        // Emissione suono
         if (activeColor === 'red') playTone(220, 300);   // tono grave
         else playTone(880, 300);                        // tono acuto
+        // Breve animazione visiva
+        soundBox.style.transform = 'scale(1.1)';
+        setTimeout(() => soundBox.style.transform = 'scale(1)', 200);
       }, delay);
     }
 
