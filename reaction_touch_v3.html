@@ -28,11 +28,11 @@
     }
     .buttons {
       display: flex;
-      gap: 100px; /* distanza ulteriormente aumentata */
+      gap: 100px;
       margin-bottom: 20px;
     }
     .circle {
-      width: 22vw; /* leggermente più grandi per mobile */
+      width: 22vw;
       max-width: 110px;
       aspect-ratio: 1/1;
       border-radius: 50%;
@@ -54,7 +54,7 @@
       position: fixed;
       bottom: 10px;
       right: 10px;
-      width: 120px;
+      width: 150px;
       background: white;
       border: 1px solid #ccc;
       padding: 8px;
@@ -81,19 +81,31 @@
       color: red;
       font-weight: bold;
     }
-    #startBtn {
+    #controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    #startBtn, #stopBtn {
       padding: 10px 20px;
       background: #333;
       color: white;
       border: none;
       border-radius: 10px;
       font-size: 1.2rem;
-      margin-bottom: 20px;
+    }
+    #average {
+      text-align: center;
+      margin-top: 5px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <button id="startBtn">Inizia</button>
+  <div id="controls">
+    <button id="startBtn">Inizia</button>
+    <button id="stopBtn">Stop</button>
+  </div>
   <div id="colorBox"></div>
   <div class="buttons">
     <div class="circle red" id="redBtn">Z</div>
@@ -102,12 +114,15 @@
   <div id="results">
     <h3>Ultimi 10</h3>
     <ul id="resultsList"></ul>
+    <div id="average">Media: -</div>
   </div>
 
   <script>
     const colorBox = document.getElementById('colorBox');
     const resultsList = document.getElementById('resultsList');
+    const averageDiv = document.getElementById('average');
     const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
     const redBtn = document.getElementById('redBtn');
     const greenBtn = document.getElementById('greenBtn');
 
@@ -160,12 +175,17 @@
 
     function updateResults() {
       resultsList.innerHTML = '';
+      let sum = 0;
+      let count = 0;
       results.forEach(r => {
         const li = document.createElement('li');
         li.textContent = r.fail ? '✖' : r.value + 's';
         if (r.fail) li.classList.add('fail');
         resultsList.appendChild(li);
+        if (!r.fail) { sum += parseFloat(r.value); count++; }
       });
+      const avg = count > 0 ? (sum / count).toFixed(3) : '-';
+      averageDiv.textContent = 'Media: ' + avg + 's';
     }
 
     document.addEventListener('keydown', e => {
@@ -178,9 +198,14 @@
     greenBtn.addEventListener('click', () => handleInput('green'));
 
     startBtn.addEventListener('click', () => {
-      startBtn.style.display = 'none';
       running = true;
       scheduleNextRound();
+    });
+
+    stopBtn.addEventListener('click', () => {
+      running = false;
+      waiting = false;
+      colorBox.style.backgroundColor = 'white';
     });
   </script>
 </body>
