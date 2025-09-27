@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allenamento Tempi di Reazione - Mobile (Laterale)</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      touch-action: manipulation;
+    }
+    .game-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8vw; /* spazio tra cerchi e rettangolo, responsive */
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 600px;
+    }
+    #colorBox {
+      flex: 1;
+      max-width: 250px;
+      aspect-ratio: 1/1;
+      background-color: white;
+      border: 3px solid #333;
+      transition: background-color 0.2s;
+      border-radius: 10px;
+    }
+    .circle {
+      width: 25vw;
+      max-width: 140px;
+      aspect-ratio: 1/1;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      color: white;
+      font-weight: bold;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .red { background-color: red; }
+    .green { background-color: green; }
+
+    #results {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      width: 150px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 8px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #results h3 {
+      margin: 0;
+      text-align: center;
+      font-size: 1rem;
+    }
+    #results ul {
+      list-style: none;
+      padding: 0;
+      margin: 5px 0 0 0;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    #results li { text-align: center; }
+    .fail { color: red; font-weight: bold; }
+    #controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    #startBtn, #stopBtn {
+      padding: 10px 20px;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.2rem;
+    }
+    #average {
+      text-align: center;
+      margin-top: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button id="startBtn">Inizia</button>
+    <button id="stopBtn">Stop</button>
+  </div>
+
+  <div class="game-area">
+    <div class="circle red" id="redBtn">Z</div>
+    <div id="colorBox"></div>
+    <div class="circle green" id="greenBtn">M</div>
+  </div>
+
+  <div id="results">
+    <h3>Ultimi 10</h3>
+    <ul id="resultsList"></ul>
+    <div id="average">Media: -</div>
+  </div>
+
+  <script>
+    const colorBox = document.getElementById('colorBox');
+    const resultsList = document.getElementById('resultsList');
+    const averageDiv = document.getElementById('average');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const redBtn = document.getElementById('redBtn');
+    const greenBtn = document.getElementById('greenBtn');
+
+    let startTime = null;
+    let activeColor = null;
+    let results = [];
+    let waiting = false;
+    let running = false;
+
+    function startRound() {
+      colorBox.style.backgroundColor = 'white';
+      activeColor = null;
+      waiting = true;
+      const delay = Math.random() * 2500 + 500;
+      setTimeout(() => {
+        if (!running) return;
+        activeColor = Math.random() < 0.5 ? 'red' : 'green';
+        colorBox.style.backgroundColor = activeColor;
+        startTime = performance.now();
+        waiting = false;
+      }, delay);
+    }
+
+    function scheduleNextRound() {
+      setTimeout(() => {
+        if (running) startRound();
+      }, 2000);
+    }
+
+    function registerResult(correct) {
+      if (correct) {
+        const reactionTime = (performance.now() - startTime) / 1000;
+        results.unshift({ value: reactionTime.toFixed(3), fail: false });
+      } else {
+        results.unshift({ value: 'X', fail: true });
+      }
+      results = results.slice(0, 10);
+      updateResults();
+      colorBox.style.backgroundColor = 'white';
+      activeColor = null;
+      startTime = null;
+      scheduleNextRound();
+    }
+
+    function handleInput(inputColor) {
+      if (waiting || !startTime) return;
+      registerResult(inputColor === activeColor);
+    }
+
+    function updateResults() {
+      resultsList.innerHTML = '';
+      let sum = 0;
+      let count = 0;
+      results.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = r.fail ? '✖' : r.value + 's';
+        if (r.fail) li.classList.add('fail');
+        resultsList.appendChild(li);
+        if (!r.fail) { sum += parseFloat(r.value); count++; }
+      });
+      const avg = count > 0 ? (sum / count).toFixed(3) : '-';
+      averageDiv.textContent = 'Media: ' + avg + 's';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!running) return;
+      if (e.key.toLowerCase() === 'z') handleInput('red');
+      if (e.key.toLowerCase() === 'm') handleInput('green');
+    });
+
+    redBtn.addEventListener('click', () => handleInput('red'));
+    greenBtn.addEventListener('click', () => handleInput('green'));
+
+    startBtn.addEventListener('click', () => {
+      running = true;
+      scheduleNextRound();
+    });
+
+    stopBtn.addEventListener('click', () => {
+      running = false;
+      waiting = false;
+      colorBox.style.backgroundColor = 'white';
+    });
+  </script>
+</body>
+</html>
