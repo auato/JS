@@ -5,26 +5,22 @@
   <title>Calcolatore densità gasolio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      /* base più grande per il mobile */
-      font-size: 18px;
-    }
-
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #0f172a;
       color: #e5e7eb;
       margin: 0;
-      padding: 16px;
+      padding: 12px;
       display: flex;
       justify-content: center;
       box-sizing: border-box;
+      font-size: 22px; /* <-- aumenta/diminuisci qui per regolare TUTTO */
     }
 
     .card {
       background: #020617;
       border-radius: 18px;
-      padding: 20px 18px;
+      padding: 20px;
       box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
       width: 100%;
       max-width: 480px;
@@ -32,15 +28,15 @@
     }
 
     h1 {
-      font-size: 1.25rem;
+      font-size: 1.3em;
       margin-top: 0;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       text-align: center;
       color: #e5e7eb;
     }
 
     .subtitle {
-      font-size: 0.85rem;
+      font-size: 0.9em;
       text-align: center;
       color: #9ca3af;
       margin-bottom: 16px;
@@ -48,20 +44,19 @@
 
     label {
       display: block;
-      font-size: 0.9rem;
+      font-size: 0.95em;
       margin-bottom: 4px;
       color: #cbd5f5;
     }
 
-    input[type="number"],
     input[type="text"] {
       width: 100%;
-      padding: 10px 12px;
+      padding: 12px 14px;
       border-radius: 10px;
       border: 1px solid #1f2933;
       background: #020617;
       color: #e5e7eb;
-      font-size: 0.95rem;
+      font-size: 0.95em;
       box-sizing: border-box;
     }
 
@@ -70,23 +65,23 @@
     }
 
     .field {
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
 
     button {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       margin-top: 4px;
       border-radius: 999px;
       border: none;
-      font-weight: 600;
-      font-size: 1rem;
+      font-weight: 700;
+      font-size: 1em;
       cursor: pointer;
       background: #22c55e;
       color: #022c22;
       transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
       box-shadow: 0 8px 18px rgba(34, 197, 94, 0.4);
-      min-height: 48px; /* più comodo da toccare */
+      min-height: 52px; /* area di tap bella grande */
     }
 
     button:hover {
@@ -101,17 +96,17 @@
     }
 
     .results {
-      margin-top: 18px;
+      margin-top: 20px;
       padding-top: 14px;
       border-top: 1px solid #1f2933;
-      font-size: 0.95rem;
+      font-size: 0.95em;
     }
 
     .results-row {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 6px;
-      gap: 6px;
+      margin-bottom: 8px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
@@ -120,14 +115,14 @@
     }
 
     .value {
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .esito {
       margin-top: 10px;
       text-align: center;
-      font-size: 1.2rem;
-      font-weight: 700;
+      font-size: 1.2em;
+      font-weight: 800;
     }
 
     .esito.ok {
@@ -139,13 +134,163 @@
     }
 
     .note {
-      margin-top: 8px;
-      font-size: 0.8rem;
+      margin-top: 10px;
+      font-size: 0.8em;
       color: #6b7280;
       text-align: center;
     }
 
     .error {
-      margin-top: 8px;
-      font-size: 0.85rem;
-      co
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #f97316;
+      text-align: center;
+      min-height: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Calcolatore densità gasolio</h1>
+    <div class="subtitle">
+      Confronto densità a 15&nbsp;°C con tolleranza &plusmn;9&nbsp;‰
+    </div>
+
+    <div class="field">
+      <label for="densDich">
+        Densità dichiarata a 15&nbsp;°C (A)
+      </label>
+      <input
+        id="densDich"
+        type="text"
+        placeholder="es. 0,845"
+        inputmode="decimal"
+      />
+    </div>
+
+    <div class="field">
+      <label for="densMis">
+        Densità misurata alla T attuale (ρ<sub>T</sub>)
+      </label>
+      <input
+        id="densMis"
+        type="text"
+        placeholder="es. 0,835"
+        inputmode="decimal"
+      />
+    </div>
+
+    <div class="field">
+      <label for="temp">
+        Temperatura attuale (°C)
+      </label>
+      <input
+        id="temp"
+        type="text"
+        placeholder="es. 25"
+        inputmode="decimal"
+      />
+    </div>
+
+    <div class="field">
+      <label for="alpha">
+        Coefficiente di espansione &alpha; (default 0,0011)
+      </label>
+      <input
+        id="alpha"
+        type="text"
+        placeholder="lascia vuoto per 0,0011"
+        inputmode="decimal"
+      />
+    </div>
+
+    <button id="calcBtn">Calcola</button>
+
+    <div class="error" id="error"></div>
+
+    <div class="results" id="results" style="display:none;">
+      <div class="results-row">
+        <span class="label">Densità teorica a 15&nbsp;°C (ρ<sub>15</sub>):</span>
+        <span class="value" id="dens15"></span>
+      </div>
+      <div class="results-row">
+        <span class="label">Scarto (‰):</span>
+        <span class="value" id="permille"></span>
+      </div>
+      <div class="esito" id="esito"></div>
+      <div class="note">
+        Esito OK se -9&nbsp;‰ ≤ scarto ≤ +9&nbsp;‰
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toNumber(value) {
+      if (!value) return NaN;
+      // accetta virgola o punto
+      return parseFloat(String(value).replace(',', '.'));
+    }
+
+    function calculate() {
+      const densDichRaw = document.getElementById('densDich').value;
+      const densMisRaw = document.getElementById('densMis').value;
+      const tempRaw = document.getElementById('temp').value;
+      const alphaRaw = document.getElementById('alpha').value;
+
+      const densDich = toNumber(densDichRaw);
+      const densMis = toNumber(densMisRaw);
+      const temp = toNumber(tempRaw);
+      let alpha = alphaRaw.trim() === '' ? 0.0011 : toNumber(alphaRaw);
+
+      const errorEl = document.getElementById('error');
+      const resultsEl = document.getElementById('results');
+      const dens15El = document.getElementById('dens15');
+      const permilleEl = document.getElementById('permille');
+      const esitoEl = document.getElementById('esito');
+
+      errorEl.textContent = '';
+      resultsEl.style.display = 'none';
+      esitoEl.className = 'esito';
+
+      if (isNaN(densDich) || isNaN(densMis) || isNaN(temp) || isNaN(alpha)) {
+        errorEl.textContent = 'Inserisci tutti i valori numerici (puoi usare anche la virgola).';
+        return;
+      }
+
+      if (densDich <= 0) {
+        errorEl.textContent = 'La densità dichiarata deve essere maggiore di zero.';
+        return;
+      }
+
+      // Densità teorica a 15 °C
+      const dens15 = densMis / (1 + alpha * (temp - 15));
+
+      // Scarto in permille: (A - B) / A * 1000
+      const permille = (densDich - dens15) / densDich * 1000;
+
+      dens15El.textContent = dens15.toFixed(4).replace('.', ',');
+      permilleEl.textContent = permille.toFixed(2).replace('.', ',');
+
+      // Esito OK / NO con soglia -9…+9
+      if (permille >= -9 && permille <= 9) {
+        esitoEl.textContent = 'OK';
+        esitoEl.classList.add('ok');
+      } else {
+        esitoEl.textContent = 'NO';
+        esitoEl.classList.add('no');
+      }
+
+      resultsEl.style.display = 'block';
+    }
+
+    document.getElementById('calcBtn').addEventListener('click', calculate);
+
+    // Invio = calcola
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        calculate();
+      }
+    });
+  </script>
+</body>
+</html>
