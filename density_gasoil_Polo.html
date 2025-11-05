@@ -81,7 +81,7 @@
       color: #022c22;
       transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
       box-shadow: 0 8px 18px rgba(34, 197, 94, 0.4);
-      min-height: 52px; /* area di tap bella grande */
+      min-height: 52px;
     }
 
     button:hover {
@@ -158,7 +158,7 @@
 
     <div class="field">
       <label for="densDich">
-        Densità dichiarata a 15&nbsp;°C (DAS, kg/m³)
+        Densità dichiarata a 15&nbsp;°C (DAS, kg/m³) <br /><small>(es. 824,3)</small>
       </label>
       <input
         id="densDich"
@@ -170,7 +170,7 @@
 
     <div class="field">
       <label for="densMis">
-        Densità misurata alla T attuale (kg/m³)
+        Densità misurata alla T attuale (kg/m³) <br /><small>(es. 829,0)</small>
       </label>
       <input
         id="densMis"
@@ -182,7 +182,7 @@
 
     <div class="field">
       <label for="temp">
-        Temperatura attuale (°C)
+        Temperatura attuale (°C) <br /><small>(es. 20)</small>
       </label>
       <input
         id="temp"
@@ -194,7 +194,7 @@
 
     <div class="field">
       <label for="alpha">
-        Coefficiente da sottrarre (α in kg/L, default 0,0011)
+        Coefficiente da sottrarre α (kg/L) <br /><small>default 0,0011</small>
       </label>
       <input
         id="alpha"
@@ -210,8 +210,16 @@
 
     <div class="results" id="results" style="display:none;">
       <div class="results-row">
-        <span class="label">Densità teorica a 15&nbsp;°C (kg/m³):</span>
-        <span class="value" id="dens15"></span>
+        <span class="label">ρ<sub>15</sub> teorica (kg/m³):</span>
+        <span class="value" id="dens15_kgm3"></span>
+      </div>
+      <div class="results-row">
+        <span class="label">ρ<sub>15</sub> teorica (kg/L):</span>
+        <span class="value" id="dens15_kgL"></span>
+      </div>
+      <div class="results-row">
+        <span class="label">B = (ρ<sub>15</sub> − α) (kg/L):</span>
+        <span class="value" id="B_kgL"></span>
       </div>
       <div class="results-row">
         <span class="label">Scarto (‰):</span>
@@ -219,15 +227,16 @@
       </div>
       <div class="esito" id="esito"></div>
       <div class="note">
-        Esito OK se -9&nbsp;‰ ≤ scarto ≤ +9&nbsp;‰
+        Esito OK se -9&nbsp;‰ ≤ scarto ≤ +9&nbsp;‰ <br />
+        (scarto = (B − A) / A × 1000, con A = DAS in kg/L)
       </div>
     </div>
   </div>
 
   <script>
+    // Converte stringa con virgola/punto in numero JS
     function toNumber(value) {
       if (!value) return NaN;
-      // accetta virgola o punto
       return parseFloat(String(value).replace(',', '.'));
     }
 
@@ -237,15 +246,17 @@
       const tempRaw = document.getElementById('temp').value;
       const alphaRaw = document.getElementById('alpha').value;
 
-      // INPUT: kg/m³ e °C
-      const densDich_kgm3 = toNumber(densDichRaw);
-      const densMis_kgm3 = toNumber(densMisRaw);
-      const tempC = toNumber(tempRaw);
-      let alpha_kgL = alphaRaw.trim() === '' ? 0.0011 : toNumber(alphaRaw);
+      // ------------- INPUT (kg/m³ e °C) -------------
+      const densDich_kgm3 = toNumber(densDichRaw); // A1
+      const densMis_kgm3 = toNumber(densMisRaw);   // A2
+      const tempC = toNumber(tempRaw);             // A3
+      let alpha_kgL = alphaRaw.trim() === '' ? 0.0011 : toNumber(alphaRaw); // A4 in kg/L
 
       const errorEl = document.getElementById('error');
       const resultsEl = document.getElementById('results');
-      const dens15El = document.getElementById('dens15');
+      const dens15_kgm3_El = document.getElementById('dens15_kgm3');
+      const dens15_kgL_El = document.getElementById('dens15_kgL');
+      const B_kgL_El = document.getElementById('B_kgL');
       const permilleEl = document.getElementById('permille');
       const esitoEl = document.getElementById('esito');
 
@@ -270,22 +281,24 @@
         return;
       }
 
-      // 1) Densità teorica a 15 °C in kg/m³ (formula tipo 53B per gasolio)
+      // 1) ρ15 in kg/m³ (formula tipo 53B per gasolio)
       //    rho15 = rho_obs + 0.7 * (T - 15)
       const rho15_kgm3 = densMis_kgm3 + 0.7 * (tempC - 15);
 
       // 2) Conversione a kg/L
       const rho15_kgL = rho15_kgm3 / 1000;
-      const densDich_kgL = densDich_kgm3 / 1000;
+      const densDich_kgL = densDich_kgm3 / 1000; // DAS a 15°C in kg/L
 
-      // 3) B = densità 15°C in kg/L - alpha (kg/L)
+      // 3) B = densità a 15°C (kg/L) - alpha (kg/L)
       const B_kgL = rho15_kgL - alpha_kgL;
 
       // 4) Scarto in permille: (B - A) / A * 1000
       const permille = (B_kgL - densDich_kgL) / densDich_kgL * 1000;
 
-      // Output
-      dens15El.textContent = rho15_kgm3.toFixed(1).replace('.', ','); // kg/m³
+      // -------- OUTPUT ----------
+      dens15_kgm3_El.textContent = rho15_kgm3.toFixed(1).replace('.', ',');
+      dens15_kgL_El.textContent = rho15_kgL.toFixed(4).replace('.', ',');
+      B_kgL_El.textContent = B_kgL.toFixed(4).replace('.', ',');
       permilleEl.textContent = permille.toFixed(4).replace('.', ',');
 
       // 5) Esito OK / NO con soglia -9…+9
