@@ -153,29 +153,29 @@
   <div class="card">
     <h1>Calcolatore densità gasolio</h1>
     <div class="subtitle">
-      Confronto densità a 15&nbsp;°C con tolleranza &plusmn;9&nbsp;‰
+      Input in kg/m³ – confronto a 15&nbsp;°C con tolleranza &plusmn;9&nbsp;‰
     </div>
 
     <div class="field">
       <label for="densDich">
-        Densità dichiarata a 15&nbsp;°C (DAS)
+        Densità dichiarata a 15&nbsp;°C (DAS, kg/m³)
       </label>
       <input
         id="densDich"
         type="text"
-        placeholder="es. 0,845"
+        placeholder="es. 824,3"
         inputmode="decimal"
       />
     </div>
 
     <div class="field">
       <label for="densMis">
-        Densità misurata alla T attuale
+        Densità misurata alla T attuale (kg/m³)
       </label>
       <input
         id="densMis"
         type="text"
-        placeholder="es. 0,835"
+        placeholder="es. 829,0"
         inputmode="decimal"
       />
     </div>
@@ -187,14 +187,14 @@
       <input
         id="temp"
         type="text"
-        placeholder="es. 25"
+        placeholder="es. 20"
         inputmode="decimal"
       />
     </div>
 
     <div class="field">
       <label for="alpha">
-        Coefficiente di espansione &alpha; (default 0,0011)
+        Coefficiente da sottrarre (α in kg/L, default 0,0011)
       </label>
       <input
         id="alpha"
@@ -210,7 +210,7 @@
 
     <div class="results" id="results" style="display:none;">
       <div class="results-row">
-        <span class="label">Densità teorica ricavata (tabella ASTM) a 15&nbsp;°C:</span>
+        <span class="label">Densità teorica a 15&nbsp;°C (kg/m³):</span>
         <span class="value" id="dens15"></span>
       </div>
       <div class="results-row">
@@ -237,10 +237,11 @@
       const tempRaw = document.getElementById('temp').value;
       const alphaRaw = document.getElementById('alpha').value;
 
-      const densDich = toNumber(densDichRaw);
-      const densMis = toNumber(densMisRaw);
-      const temp = toNumber(tempRaw);
-      let alpha = alphaRaw.trim() === '' ? 0.0011 : toNumber(alphaRaw);
+      // INPUT: kg/m³ e °C
+      const densDich_kgm3 = toNumber(densDichRaw);
+      const densMis_kgm3 = toNumber(densMisRaw);
+      const tempC = toNumber(tempRaw);
+      let alpha_kgL = alphaRaw.trim() === '' ? 0.0011 : toNumber(alphaRaw);
 
       const errorEl = document.getElementById('error');
       const resultsEl = document.getElementById('results');
@@ -252,26 +253,42 @@
       resultsEl.style.display = 'none';
       esitoEl.className = 'esito';
 
-      if (isNaN(densDich) || isNaN(densMis) || isNaN(temp) || isNaN(alpha)) {
-        errorEl.textContent = 'Inserisci tutti i valori numerici (puoi usare anche la virgola).';
+      if (
+        isNaN(densDich_kgm3) ||
+        isNaN(densMis_kgm3) ||
+        isNaN(tempC) ||
+        isNaN(alpha_kgL)
+      ) {
+        errorEl.textContent =
+          'Inserisci tutti i valori numerici (puoi usare anche la virgola).';
         return;
       }
 
-      if (densDich <= 0) {
-        errorEl.textContent = 'La densità dichiarata deve essere maggiore di zero.';
+      if (densDich_kgm3 <= 0) {
+        errorEl.textContent =
+          'La densità dichiarata deve essere maggiore di zero.';
         return;
       }
 
-      // Densità teorica a 15 °C
-      const dens15 = densMis / (1 + alpha * (temp - 15));
+      // 1) Densità teorica a 15 °C in kg/m³ (formula tipo 53B per gasolio)
+      //    rho15 = rho_obs + 0.7 * (T - 15)
+      const rho15_kgm3 = densMis_kgm3 + 0.7 * (tempC - 15);
 
-      // Scarto in permille: (A - B) / A * 1000
-      const permille = (densDich - dens15) / densDich * 1000;
+      // 2) Conversione a kg/L
+      const rho15_kgL = rho15_kgm3 / 1000;
+      const densDich_kgL = densDich_kgm3 / 1000;
 
-      dens15El.textContent = dens15.toFixed(4).replace('.', ',');
-      permilleEl.textContent = permille.toFixed(2).replace('.', ',');
+      // 3) B = densità 15°C in kg/L - alpha (kg/L)
+      const B_kgL = rho15_kgL - alpha_kgL;
 
-      // Esito OK / NO con soglia -9…+9
+      // 4) Scarto in permille: (B - A) / A * 1000
+      const permille = (B_kgL - densDich_kgL) / densDich_kgL * 1000;
+
+      // Output
+      dens15El.textContent = rho15_kgm3.toFixed(1).replace('.', ','); // kg/m³
+      permilleEl.textContent = permille.toFixed(4).replace('.', ',');
+
+      // 5) Esito OK / NO con soglia -9…+9
       if (permille >= -9 && permille <= 9) {
         esitoEl.textContent = 'OK';
         esitoEl.classList.add('ok');
