@@ -2,17 +2,16 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Alarmed + Calendar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Alarmed Web Direct</title>
     <style>
         :root {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
-            --primary: #ff9800; /* Arancione stile Alarmed */
+            --primary: #00e5ff; /* Ciano elettrico per visibilità */
             --text: #ffffff;
             --text-muted: #aaaaaa;
             --danger: #ff4444;
-            --success: #00C851;
         }
 
         body {
@@ -21,10 +20,10 @@
             color: var(--text);
             margin: 0;
             padding: 0;
-            padding-bottom: 80px; /* Spazio per la nav bar */
+            padding-bottom: 100px;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Header */
         header {
             background-color: var(--card-bg);
             padding: 15px;
@@ -35,211 +34,143 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Navigation Tabs */
+        /* Pulsante permessi notifiche */
+        #btn-permission {
+            font-size: 0.8rem; background: var(--danger); border: none; color: white;
+            padding: 5px 10px; border-radius: 5px; cursor: pointer;
+        }
+
+        /* Navigazione */
         .nav-bar {
             position: fixed;
-            bottom: 0;
-            width: 100%;
+            bottom: 0; width: 100%;
             background-color: var(--card-bg);
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-top: 1px solid #333;
-            z-index: 100;
+            display: flex; justify-content: space-around;
+            padding: 15px 0; border-top: 1px solid #333;
+            z-index: 100; padding-bottom: env(safe-area-inset-bottom);
         }
 
         .nav-item {
-            color: var(--text-muted);
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.9rem;
+            color: var(--text-muted); cursor: pointer;
+            font-weight: bold; text-transform: uppercase; font-size: 0.8rem;
         }
+        .nav-item.active { color: var(--primary); }
 
-        .nav-item.active {
-            color: var(--primary);
-        }
-
-        /* Views */
-        .view {
-            display: none;
-            padding: 15px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .view.active {
-            display: block;
-        }
+        /* Viste */
+        .view { display: none; padding: 15px; max-width: 600px; margin: 0 auto; }
+        .view.active { display: block; }
 
         /* Reminder List */
         .reminder-card {
             background-color: var(--card-bg);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 5px solid var(--primary);
+            margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-left: 4px solid var(--primary);
         }
 
         .reminder-info h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
         .reminder-info p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
         
         .btn-delete {
-            background: none;
-            border: none;
-            color: var(--danger);
-            font-size: 1.5rem;
-            cursor: pointer;
+            background: none; border: none; color: var(--danger);
+            font-size: 1.5rem; cursor: pointer; padding: 0 10px;
         }
 
-        /* FAB (Floating Action Button) */
+        /* FAB */
         .fab {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            background-color: var(--primary);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            cursor: pointer;
-            z-index: 99;
+            position: fixed; bottom: 90px; right: 20px;
+            background-color: var(--primary); color: #000;
+            width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; box-shadow: 0 4px 15px rgba(0,229,255,0.4);
+            cursor: pointer; z-index: 99; font-weight: bold;
         }
 
-        /* Modal Add/Edit */
+        /* Modal */
         .modal {
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85); z-index: 200;
+            justify-content: center; align-items: center;
         }
-
         .modal-content {
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
+            background-color: #252525; padding: 25px; border-radius: 15px;
+            width: 85%; max-width: 400px;
         }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            background-color: #333;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 5px;
-            box-sizing: border-box;
+        input, textarea {
+            width: 100%; padding: 12px; margin: 10px 0;
+            background-color: #333; border: 1px solid #444;
+            color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px;
         }
-
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-cancel { background-color: #444; color: white; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;}
+        .btn-primary { background-color: var(--primary); color: #000; }
+        .btn-cancel { background-color: transparent; border: 1px solid #555; color: #ccc; }
 
-        /* Calendar Styles */
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-        .day-name { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px; }
+        /* Calendario */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 15px;}
+        .day-name { text-align: center; color: var(--text-muted); font-size: 0.7rem; margin-bottom: 5px;}
         .day-cell { 
-            background-color: #2a2a2a; 
-            min-height: 60px; 
-            padding: 5px; 
-            border-radius: 5px; 
-            font-size: 0.9rem; 
-            position: relative;
+            background-color: #2a2a2a; min-height: 50px; padding: 4px; 
+            border-radius: 6px; font-size: 0.9rem; position: relative;
         }
         .day-cell.today { border: 1px solid var(--primary); }
-        .day-cell.empty { background-color: transparent; }
         .dot { 
-            height: 6px; width: 6px; 
-            background-color: var(--primary); 
-            border-radius: 50%; 
-            display: inline-block; 
-            margin: 1px;
+            height: 5px; width: 5px; background-color: var(--primary); 
+            border-radius: 50%; display: inline-block; margin: 1px;
         }
 
-        /* Alarm Overlay */
+        /* Overlay Allarme */
         #alarm-overlay {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(255, 0, 0, 0.9);
-            z-index: 300;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            animation: pulse 1s infinite;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--primary); z-index: 300;
+            flex-direction: column; justify-content: center; align-items: center; text-align: center;
+            animation: pulse 0.8s infinite alternate;
         }
-
-        @keyframes pulse {
-            0% { background-color: rgba(200, 0, 0, 0.9); }
-            50% { background-color: rgba(255, 50, 50, 0.9); }
-            100% { background-color: rgba(200, 0, 0, 0.9); }
-        }
-
-        .alarm-title { font-size: 2rem; font-weight: bold; margin-bottom: 20px; }
-        .alarm-actions .btn { margin: 10px; font-size: 1.2rem; padding: 15px; }
+        @keyframes pulse { from { opacity: 1; } to { opacity: 0.8; } }
+        .alarm-title { font-size: 2.5rem; color: black; font-weight: 900; margin-bottom: 30px; text-transform: uppercase;}
 
     </style>
 </head>
 <body>
 
-    <header>Web Alarmed</header>
+    <header>
+        <span>🔔 Alarmed</span>
+        <button id="btn-permission" onclick="requestPermissions()">Abilita Notifiche</button>
+    </header>
 
-    <!-- LISTA VIEW -->
+    <!-- LISTA -->
     <div id="view-list" class="view active">
-        <div id="reminder-list">
-            <!-- I promemoria appariranno qui -->
-            <div style="text-align:center; margin-top: 50px; color: #555;">
-                Nessun promemoria attivo.<br>Premi + per aggiungerne uno.
-            </div>
-        </div>
+        <div id="reminder-list"></div>
     </div>
 
-    <!-- CALENDARIO VIEW -->
+    <!-- CALENDARIO -->
     <div id="view-calendar" class="view">
-        <div class="calendar-header">
-            <button class="btn-cancel" onclick="changeMonth(-1)">&lt;</button>
-            <span id="current-month-year">Mese Anno</span>
-            <button class="btn-cancel" onclick="changeMonth(1)">&gt;</button>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <button class="btn-cancel" onclick="changeMonth(-1)">◀</button>
+            <span id="current-month-year" style="font-weight:bold;"></span>
+            <button class="btn-cancel" onclick="changeMonth(1)">▶</button>
         </div>
-        <div class="calendar-grid" id="calendar-grid">
-            <!-- Giorni generati via JS -->
-        </div>
-        <div id="calendar-details" style="margin-top: 20px;"></div>
+        <div class="calendar-grid" id="calendar-grid"></div>
     </div>
 
-    <!-- Floating Action Button -->
     <div class="fab" onclick="openModal()">+</div>
 
-    <!-- Navigazione -->
     <div class="nav-bar">
         <div class="nav-item active" onclick="switchView('list')">Lista</div>
         <div class="nav-item" onclick="switchView('calendar')">Calendario</div>
     </div>
 
-    <!-- MODAL AGGIUNTA -->
+    <!-- MODAL ADD -->
     <div id="add-modal" class="modal">
         <div class="modal-content">
-            <h2>Nuovo Promemoria</h2>
-            <input type="text" id="inp-title" placeholder="Cosa devi fare?" autofocus>
-            <textarea id="inp-notes" rows="3" placeholder="Note aggiuntive..."></textarea>
-            <label>Data e Ora:</label>
+            <h2 style="margin-top:0">Nuovo Promemoria</h2>
+            <input type="text" id="inp-title" placeholder="Titolo..." autofocus>
+            <textarea id="inp-notes" rows="3" placeholder="Note..."></textarea>
             <input type="datetime-local" id="inp-date">
             
             <div class="btn-group">
@@ -249,107 +180,63 @@
         </div>
     </div>
 
-    <!-- ALARM OVERLAY (Nagging) -->
+    <!-- ALARM OVERLAY -->
     <div id="alarm-overlay">
-        <div class="alarm-title" id="alarm-text">DRIIIN!</div>
-        <div class="alarm-actions">
-            <button class="btn" style="background: white; color: black;" onclick="stopAlarm()">FATTO</button>
-            <button class="btn" style="background: #333; color: white;" onclick="snoozeAlarm(10)">Snooze 10m</button>
-            <button class="btn" style="background: #333; color: white;" onclick="snoozeAlarm(60)">Snooze 1h</button>
-        </div>
+        <div class="alarm-title" id="alarm-text">SVEGLIA!</div>
+        <div style="font-size: 1.2rem; color: black; margin-bottom: 30px;" id="alarm-note"></div>
+        <button class="btn" style="background:black; color:white; width:200px; padding: 20px;" onclick="stopAlarm()">HO FATTO</button>
     </div>
 
     <script>
-        // --- STATO E SETUP ---
+        // --- SETUP DATI ---
         let reminders = JSON.parse(localStorage.getItem('myReminders')) || [];
-        let currentAlarmId = null;
-        let audioContext = null; // Per il suono
-        let osc = null;
-        let alarmInterval = null;
-        
-        // Variabili Calendario
         let calDate = new Date();
+        let currentAlarmId = null;
+        let audioCtx = null;
 
-        // --- FUNZIONI AUDIO (Bip fastidioso stile Alarmed) ---
-        function startBeep() {
-            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // Crea oscillatore
-            osc = audioContext.createOscillator();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(440, audioContext.currentTime); // A4
-            
-            // Gain per volume e pulsazione
-            const gainNode = audioContext.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            osc.start();
-            
-            // Modula il volume per fare "Bip-Bip-Bip"
-            let isOn = true;
-            alarmInterval = setInterval(() => {
-                if(isOn) {
-                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                    osc.frequency.setValueAtTime(440, audioContext.currentTime); 
+        // Verifica permessi notifiche all'avvio
+        if (Notification.permission === "granted") {
+            document.getElementById('btn-permission').style.display = 'none';
+        }
+
+        function requestPermissions() {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    alert("Notifiche attivate! Lascia questa scheda aperta in background.");
+                    document.getElementById('btn-permission').style.display = 'none';
+                    // Test immediato
+                    new Notification("Alarmed", { body: "Test notifiche riuscito!" });
                 } else {
-                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-                    osc.frequency.setValueAtTime(550, audioContext.currentTime); // Alterna tono
+                    alert("Devi permettere le notifiche per ricevere avvisi quando non guardi lo schermo.");
                 }
-                isOn = !isOn;
-            }, 300);
+            });
         }
 
-        function stopBeep() {
-            if (osc) {
-                osc.stop();
-                osc = null;
-            }
-            if (alarmInterval) {
-                clearInterval(alarmInterval);
-                alarmInterval = null;
-            }
-        }
-
-        // --- LOGICA PRINCIPALE ---
-
-        // Salva nel localStorage
-        function persist() {
-            reminders.sort((a,b) => new Date(a.date) - new Date(b.date));
-            localStorage.setItem('myReminders', JSON.stringify(reminders));
-            renderList();
-            renderCalendar();
-        }
-
-        // Renderizza la lista
+        // --- LOGICA UI ---
         function renderList() {
             const list = document.getElementById('reminder-list');
             list.innerHTML = '';
             
-            const activeReminders = reminders.filter(r => !r.done);
+            reminders.sort((a,b) => new Date(a.date) - new Date(b.date));
+            const active = reminders.filter(r => !r.done);
 
-            if (activeReminders.length === 0) {
-                list.innerHTML = '<div style="text-align:center; margin-top: 50px; color: #555;">Nessun promemoria attivo.</div>';
+            if (active.length === 0) {
+                list.innerHTML = '<div style="text-align:center; margin-top: 60px; color:#555;">Nessun promemoria attivo.</div>';
                 return;
             }
 
-            activeReminders.forEach(r => {
-                const dateObj = new Date(r.date);
-                const dateStr = dateObj.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
-                const timeStr = dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            active.forEach(r => {
+                const d = new Date(r.date);
+                const isOverdue = new Date() > d;
                 
-                // Calcola se è scaduto
-                const isOverdue = new Date() > dateObj;
-                const styleColor = isOverdue ? 'var(--danger)' : 'var(--primary)';
-
                 const div = document.createElement('div');
                 div.className = 'reminder-card';
-                div.style.borderLeftColor = styleColor;
+                if(isOverdue) div.style.borderLeftColor = 'var(--danger)';
+                
                 div.innerHTML = `
                     <div class="reminder-info">
-                        <h3 style="${isOverdue ? 'color:'+styleColor : ''}">${r.title}</h3>
-                        <p>${dateStr} alle ${timeStr}</p>
-                        ${r.notes ? `<p style="font-style:italic; font-size:0.8rem; margin-top:4px;">${r.notes}</p>` : ''}
+                        <h3 style="${isOverdue ? 'color:var(--danger)' : ''}">${r.title}</h3>
+                        <p>${d.toLocaleDateString()} alle ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                     </div>
                     <button class="btn-delete" onclick="deleteReminder(${r.id})">&times;</button>
                 `;
@@ -357,200 +244,164 @@
             });
         }
 
-        // Renderizza il Calendario
         function renderCalendar() {
             const grid = document.getElementById('calendar-grid');
             const monthLabel = document.getElementById('current-month-year');
             grid.innerHTML = '';
-
-            // Nomi giorni
-            ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].forEach(d => {
-                grid.innerHTML += `<div class="day-name">${d}</div>`;
-            });
+            
+            ['L','M','M','G','V','S','D'].forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
 
             const year = calDate.getFullYear();
             const month = calDate.getMonth();
-            
             monthLabel.innerText = calDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
 
-            const firstDayOfMonth = new Date(year, month, 1).getDay(); 
-            // Aggiusta per Lunedì = 0 (JS Domenica = 0)
-            const adjustFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+            const firstDay = new Date(year, month, 1).getDay(); 
+            const adjustFirst = firstDay === 0 ? 6 : firstDay - 1;
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            // Celle vuote inizio
-            for(let i=0; i<adjustFirstDay; i++) {
-                grid.innerHTML += `<div class="day-cell empty"></div>`;
-            }
-
-            const today = new Date();
+            for(let i=0; i<adjustFirst; i++) grid.innerHTML += `<div></div>`;
 
             for(let d=1; d<=daysInMonth; d++) {
                 const cellDate = new Date(year, month, d);
-                const isToday = cellDate.toDateString() === today.toDateString();
+                const isToday = cellDate.toDateString() === new Date().toDateString();
                 
-                // Trova reminders per questo giorno
-                const daysReminders = reminders.filter(r => {
+                const hasEvents = reminders.some(r => {
                     const rDate = new Date(r.date);
-                    return rDate.getDate() === d && rDate.getMonth() === month && rDate.getFullYear() === year && !r.done;
+                    return !r.done && rDate.getDate() === d && rDate.getMonth() === month && rDate.getFullYear() === year;
                 });
-
-                let dots = '';
-                daysReminders.forEach(() => { dots += '<span class="dot"></span>'; });
 
                 const cell = document.createElement('div');
                 cell.className = `day-cell ${isToday ? 'today' : ''}`;
-                cell.innerHTML = `
-                    <div style="font-weight:bold; margin-bottom:2px;">${d}</div>
-                    <div>${dots}</div>
-                `;
+                cell.innerHTML = `<div>${d}</div><div>${hasEvents ? '<span class="dot"></span>' : ''}</div>`;
                 
-                // Cliccando sul giorno mostra dettagli (opzionale, per ora solo visivo)
                 cell.onclick = () => {
-                    if(daysReminders.length > 0) {
-                        alert(`Promemoria del ${d}:\n` + daysReminders.map(r => "- " + r.title).join("\n"));
-                    }
+                    // Se clicco su un giorno, se ci sono eventi li mostra
+                    const daysEvents = reminders.filter(r => {
+                        const rDate = new Date(r.date);
+                        return !r.done && rDate.getDate() === d && rDate.getMonth() === month;
+                    });
+                    if(daysEvents.length > 0) alert(`Eventi del ${d}:\n` + daysEvents.map(e => "- " + e.title).join("\n"));
                 };
 
                 grid.appendChild(cell);
             }
         }
 
-        function changeMonth(delta) {
-            calDate.setMonth(calDate.getMonth() + delta);
-            renderCalendar();
-        }
-
-        // --- GESTIONE REMINDER (CRUD) ---
-
-        function openModal() {
-            // Setta input data a ora attuale
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('inp-date').value = now.toISOString().slice(0,16);
-            
-            document.getElementById('inp-title').value = '';
-            document.getElementById('inp-notes').value = '';
-            document.getElementById('add-modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('add-modal').style.display = 'none';
-        }
-
+        // --- GESTIONE DATI ---
         function saveReminder() {
             const title = document.getElementById('inp-title').value;
             const notes = document.getElementById('inp-notes').value;
             const dateVal = document.getElementById('inp-date').value;
 
-            if (!title || !dateVal) {
-                alert("Inserisci titolo e data!");
-                return;
-            }
+            if (!title || !dateVal) return alert("Inserisci Titolo e Data!");
 
-            const newReminder = {
-                id: Date.now(),
-                title: title,
-                notes: notes,
-                date: dateVal, // ISO string
-                done: false,
-                nagging: true // Default attivo stile Alarmed
-            };
-
-            reminders.push(newReminder);
-            persist();
-            closeModal();
+            reminders.push({ id: Date.now(), title, notes, date: dateVal, done: false });
+            localStorage.setItem('myReminders', JSON.stringify(reminders));
             
-            // Richiesta permessi notifica browser
-            if (Notification.permission !== "granted") {
-                Notification.requestPermission();
-            }
+            closeModal();
+            renderList();
+            renderCalendar();
+            
+            // Richiesta preventiva se non fatta
+            if (Notification.permission === "default") requestPermissions();
         }
 
         function deleteReminder(id) {
-            if(confirm("Eliminare questo promemoria?")) {
+            if(confirm("Eliminare?")) {
                 reminders = reminders.filter(r => r.id !== id);
-                persist();
+                localStorage.setItem('myReminders', JSON.stringify(reminders));
+                renderList();
+                renderCalendar();
             }
         }
 
-        // --- ENGINE ALARM (Check ogni secondo) ---
-        setInterval(() => {
-            const now = new Date();
+        // --- ALLARME & NOTIFICHE ---
+        function playSound() {
+            // Bip sintetizzato (non serve file mp3)
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sawtooth'; // Suono più fastidioso
+            osc.frequency.value = 500;
             
-            reminders.forEach(r => {
-                if (r.done) return;
-
-                const rDate = new Date(r.date);
-                // Se è passato l'orario (entro 1 minuto di tolleranza per evitare loop infiniti su vecchi se l'app era chiusa)
-                // O se è vecchio ma non marcato 'done', suona comunque appena apro l'app
-                if (now >= rDate) {
-                    triggerAlarm(r);
-                }
-            });
-
-        }, 1000);
-
-        function triggerAlarm(reminder) {
-            // Evita di ri-triggerare se l'overlay è già aperto per lo stesso ID
-            if (document.getElementById('alarm-overlay').style.display === 'flex') return;
-
-            currentAlarmId = reminder.id;
-            document.getElementById('alarm-text').innerText = reminder.title;
-            document.getElementById('alarm-overlay').style.display = 'flex';
+            // Pattern Bip-Bip
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.1);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
             
-            // Suono persistente (Nagging)
-            startBeep();
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
 
-            // Notifica sistema
+        function triggerAlarm(r) {
+            // 1. Notifica di Sistema (appare anche fuori browser)
             if (Notification.permission === "granted") {
-                new Notification("Alarmed Web", { body: reminder.title });
+                const notif = new Notification("⏰ " + r.title, {
+                    body: r.notes || "È ora!",
+                    requireInteraction: true, // Rimane finché non clicchi
+                    vibrate: [200, 100, 200]
+                });
+            }
+
+            // 2. Se l'utente sta guardando lo schermo, mostra overlay gigante
+            const overlay = document.getElementById('alarm-overlay');
+            if (overlay.style.display !== 'flex') {
+                document.getElementById('alarm-text').innerText = r.title;
+                document.getElementById('alarm-note').innerText = r.notes || "";
+                overlay.style.display = 'flex';
+                currentAlarmId = r.id;
+                playSound();
+                
+                // Loop suono finché non stoppa
+                window.alarmInterval = setInterval(playSound, 1000);
             }
         }
 
         function stopAlarm() {
-            stopBeep();
             document.getElementById('alarm-overlay').style.display = 'none';
+            if (window.alarmInterval) clearInterval(window.alarmInterval);
             
-            // Marca come fatto o cancella
-            // In stile Alarmed "Done" lo rimuove dalla lista attiva ma non lo cancella dal DB (qui lo rimuoviamo per semplicità)
-            // O se vuoi tenerlo come storico, metti r.done = true.
-            // Per ora: Cancelliamo dalla vista
+            // Segna come fatto? O cancella? Qui cancello per pulizia
             reminders = reminders.filter(r => r.id !== currentAlarmId);
-            persist();
-            currentAlarmId = null;
+            localStorage.setItem('myReminders', JSON.stringify(reminders));
+            renderList();
+            renderCalendar();
         }
 
-        function snoozeAlarm(minutes) {
-            stopBeep();
-            document.getElementById('alarm-overlay').style.display = 'none';
-            
-            const rIndex = reminders.findIndex(r => r.id === currentAlarmId);
-            if (rIndex > -1) {
-                const newTime = new Date();
-                newTime.setMinutes(newTime.getMinutes() + minutes);
-                // Aggiusta fuso orario per salvare stringa corretta nel local input
-                newTime.setMinutes(newTime.getMinutes() - newTime.getTimezoneOffset());
-                reminders[rIndex].date = newTime.toISOString().slice(0,16);
-                persist();
-            }
-            currentAlarmId = null;
-        }
+        // --- ENGINE (Motore di controllo) ---
+        // Controlla ogni 2 secondi
+        setInterval(() => {
+            const now = new Date();
+            reminders.forEach(r => {
+                if (!r.done && new Date(r.date) <= now) {
+                    triggerAlarm(r);
+                }
+            });
+        }, 2000);
 
-        // --- UI SWITCHER ---
-        function switchView(viewName) {
+        // --- UTILITY UI ---
+        function openModal() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('inp-date').value = now.toISOString().slice(0,16);
+            document.getElementById('inp-title').value = '';
+            document.getElementById('inp-notes').value = '';
+            document.getElementById('add-modal').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('add-modal').style.display = 'none'; }
+        
+        function switchView(v) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById('view-' + viewName).classList.add('active');
-            // Trova il nav item corretto
-            const navIndex = viewName === 'list' ? 0 : 1;
-            document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
-
-            if(viewName === 'calendar') renderCalendar();
+            document.getElementById('view-' + v).classList.add('active');
+            const idx = v === 'list' ? 0 : 1;
+            document.querySelectorAll('.nav-item')[idx].classList.add('active');
+            if(v==='calendar') renderCalendar();
         }
+        function changeMonth(d) { calDate.setMonth(calDate.getMonth() + d); renderCalendar(); }
 
-        // Inizializzazione
         renderList();
     </script>
 </body>
