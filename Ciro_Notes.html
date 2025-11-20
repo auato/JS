@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Alarmed Pro iOS Fixed</title>
+    <title>Alarmed Pro Stable</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -21,96 +21,76 @@
             margin: 0;
             padding: 0;
             padding-bottom: 100px;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu al tocco */
+            user-select: none; /* Evita selezione testo accidentale */
         }
 
         header {
             background-color: var(--card-bg);
             padding: 15px;
             border-bottom: 1px solid #333;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
         h1 { margin: 0; font-size: 1.2rem; }
 
         #btn-permission {
-            font-size: 0.75rem;
-            background: var(--danger);
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
+            font-size: 0.75rem; background: var(--danger); border: none; color: white;
+            padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold;
         }
 
-        /* Navigazione */
         .nav-bar {
-            position: fixed; bottom: 0; width: 100%;
-            background-color: var(--card-bg);
-            display: flex; justify-content: space-around;
-            padding: 15px 0; border-top: 1px solid #333;
-            z-index: 100; padding-bottom: env(safe-area-inset-bottom);
+            position: fixed; bottom: 0; width: 100%; background-color: var(--card-bg);
+            display: flex; justify-content: space-around; padding: 15px 0;
+            border-top: 1px solid #333; z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
         }
-        .nav-item { color: var(--text-muted); font-weight: bold; font-size: 0.8rem; cursor: pointer;}
+        .nav-item { color: var(--text-muted); font-weight: bold; font-size: 0.9rem; cursor: pointer; padding: 10px;}
         .nav-item.active { color: var(--primary); }
 
         .view { display: none; padding: 15px; max-width: 600px; margin: 0 auto; }
         .view.active { display: block; }
 
-        /* Card Reminder */
         .reminder-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 12px;
-            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--card-bg); border-radius: 12px; padding: 15px;
+            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
             border-left: 4px solid var(--primary);
         }
         .reminder-info h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
         .reminder-info p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
         
         .actions { display: flex; gap: 15px; align-items: center;}
-        .btn-icon { background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 0; }
+        .btn-icon { background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 5px; }
         
-        /* FAB */
         .fab {
             position: fixed; bottom: 90px; right: 20px;
             background-color: var(--primary); color: #000;
             width: 60px; height: 60px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 2rem; box-shadow: 0 4px 15px rgba(0,229,255,0.4);
+            font-size: 2.5rem; box-shadow: 0 4px 15px rgba(0,229,255,0.4);
             cursor: pointer; z-index: 99;
         }
 
-        /* Modal */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.85); z-index: 200;
             justify-content: center; align-items: center;
         }
         .modal-content {
-            background-color: #252525; padding: 25px; border-radius: 15px;
-            width: 85%; max-width: 400px;
+            background-color: #252525; padding: 25px; border-radius: 15px; width: 85%; max-width: 400px;
         }
         input, textarea {
             width: 100%; padding: 12px; margin: 10px 0;
-            background-color: #333; border: 1px solid #444;
-            color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px;
+            background-color: #333; border: 1px solid #444; color: white;
+            border-radius: 8px; box-sizing: border-box; font-size: 16px;
         }
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;}
         .btn-primary { background-color: var(--primary); color: #000; }
         .btn-cancel { background-color: transparent; border: 1px solid #555; color: #ccc; }
 
-        /* Calendar Styles */
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px;}
         .day-cell { 
             background-color: #2a2a2a; min-height: 50px; padding: 4px; 
             border-radius: 6px; font-size: 0.9rem; text-align: center;
@@ -118,21 +98,19 @@
         .day-cell.today { border: 1px solid var(--primary); }
         .dot { height: 5px; width: 5px; background-color: var(--primary); border-radius: 50%; display: inline-block; margin: 1px; }
 
-        /* Overlay Alarm */
         #alarm-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--primary); z-index: 300;
             flex-direction: column; justify-content: center; align-items: center; text-align: center;
         }
         .alarm-title { font-size: 3rem; font-weight: 900; color: black; margin-bottom: 20px; }
-
     </style>
 </head>
 <body>
 
     <header>
         <h1>🔔 Alarmed</h1>
-        <button id="btn-permission" onclick="handlePermissionClick()">Abilita Notifiche</button>
+        <button id="btn-permission" onclick="requestPermission()">Abilita Notifiche</button>
     </header>
 
     <!-- LISTA -->
@@ -142,7 +120,7 @@
 
     <!-- CALENDARIO -->
     <div id="view-calendar" class="view">
-        <div class="calendar-header">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <button class="btn-icon" style="color:white" onclick="changeMonth(-1)">◀</button>
             <span id="current-month-year" style="font-weight:bold"></span>
             <button class="btn-icon" style="color:white" onclick="changeMonth(1)">▶</button>
@@ -164,7 +142,7 @@
     <div id="add-modal" class="modal">
         <div class="modal-content">
             <h2>Nuovo</h2>
-            <input type="text" id="inp-title" placeholder="Cosa fare?" autofocus>
+            <input type="text" id="inp-title" placeholder="Titolo" autofocus>
             <textarea id="inp-notes" rows="3" placeholder="Note..."></textarea>
             <input type="datetime-local" id="inp-date">
             <div class="btn-group">
@@ -174,7 +152,7 @@
         </div>
     </div>
 
-    <!-- ALARM OVERLAY -->
+    <!-- ALARM -->
     <div id="alarm-overlay">
         <div class="alarm-title" id="alarm-text">SVEGLIA</div>
         <div style="color:black; margin-bottom:30px; font-size:1.2rem;" id="alarm-desc"></div>
@@ -182,52 +160,54 @@
     </div>
 
     <script>
+        // Dati
         let reminders = JSON.parse(localStorage.getItem('myReminders')) || [];
         let calDate = new Date();
         let currentAlarmId = null;
         let audioCtx = null;
         let alarmInterval = null;
 
-        // --- SETUP NOTIFICHE ---
-        function updatePermissionButton() {
+        // --- PERMESSI NOTIFICHE ---
+        function checkBtnState() {
             const btn = document.getElementById('btn-permission');
-            if (!("Notification" in window)) {
-                btn.style.display = 'none'; return;
-            }
-            if (Notification.permission === "granted") {
-                btn.style.display = "none"; 
-            } else if (Notification.permission === "denied") {
-                btn.innerText = "Notifiche Bloccate";
-                btn.style.background = "#555";
+            if (!("Notification" in window)) { btn.style.display = 'none'; return; }
+            
+            if (Notification.permission === 'granted') {
+                btn.style.display = 'none';
             } else {
-                btn.innerText = "Abilita Notifiche";
+                btn.style.display = 'block';
+                btn.innerText = Notification.permission === 'denied' ? "Sblocca Impostazioni" : "Abilita Notifiche";
             }
         }
 
-        function handlePermissionClick() {
+        function requestPermission() {
             if (!("Notification" in window)) return alert("Non supportato");
-            if (Notification.permission === "denied") return alert("Sblocca le notifiche nelle impostazioni del browser.");
-
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    alert("Notifiche attivate!");
-                    updatePermissionButton();
+            Notification.requestPermission().then(p => {
+                if(p === 'granted') { 
+                    alert("Notifiche Attive!");
+                    checkBtnState();
+                } else {
+                    alert("Devi consentire le notifiche per ricevere avvisi a schermo spento.");
                 }
             });
         }
-        updatePermissionButton();
+        checkBtnState();
 
-        // --- FIX IOS CALENDAR ---
-        function downloadICS(r) {
+        // --- EXPORT ICS (Metodo Mobile Robusto) ---
+        async function shareICS(id) {
+            // Trova l'elemento tramite ID (più sicuro che passarlo nell'HTML)
+            const r = reminders.find(item => item.id === id);
+            if(!r) return;
+
             const d = new Date(r.date);
             const pad = n => n < 10 ? '0'+n : n;
             const timeStr = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
 
             const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//AlarmedWeb//IT
+PRODID:-//AlarmedClone//IT
 BEGIN:VEVENT
-UID:${r.id}@alarmed
+UID:${r.id}
 DTSTAMP:${timeStr}
 DTSTART:${timeStr}
 DTEND:${timeStr}
@@ -241,57 +221,36 @@ END:VALARM
 END:VEVENT
 END:VCALENDAR`;
 
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const file = new File([icsContent], "evento.ics", { type: "text/calendar" });
 
-            // Rileva se siamo su iOS (iPhone/iPad)
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            
-            if (isIOS) {
-                // METODO PER IOS: Legge il file come URL dati e apre una nuova finestra
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    window.open(e.target.result);
-                };
-                reader.readAsDataURL(blob);
+            // Prova Web Share API (Android/iOS moderno)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: r.title,
+                        text: 'Aggiungi al calendario'
+                    });
+                } catch (err) {
+                    console.log("Share fallito o annullato", err);
+                }
             } else {
-                // METODO STANDARD (Android/PC)
+                // Fallback classico (Desktop o browser vecchi)
                 const link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.setAttribute('download', "evento.ics");
+                link.href = URL.createObjectURL(file);
+                link.download = "evento.ics";
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                alert("File generato. Se sei su iPhone e non si apre, usa 'Condividi' -> 'Salva su File' e poi aprilo.");
             }
         }
 
-        // --- LOGICA GENERALE ---
-        function saveReminder() {
-            const title = document.getElementById('inp-title').value;
-            const notes = document.getElementById('inp-notes').value;
-            const dateVal = document.getElementById('inp-date').value;
-            if(!title || !dateVal) return alert("Manca titolo o data");
-
-            reminders.push({ id: Date.now(), title, notes, date: dateVal, done: false });
-            localStorage.setItem('myReminders', JSON.stringify(reminders));
-            closeModal();
-            renderList();
-            renderCalendar();
-            if(Notification.permission === "default") handlePermissionClick();
-        }
-
-        function deleteReminder(id) {
-            if(confirm("Eliminare?")) {
-                reminders = reminders.filter(r => r.id !== id);
-                localStorage.setItem('myReminders', JSON.stringify(reminders));
-                renderList();
-                renderCalendar();
-            }
-        }
-
+        // --- LOGICA PRINCIPALE ---
         function renderList() {
             const list = document.getElementById('reminder-list');
             list.innerHTML = '';
+            
             reminders.sort((a,b) => new Date(a.date) - new Date(b.date));
             const active = reminders.filter(r => !r.done);
 
@@ -307,18 +266,13 @@ END:VCALENDAR`;
                 div.className = 'reminder-card';
                 if(isOverdue) div.style.borderLeftColor = 'var(--danger)';
 
-                // Prepariamo l'oggetto per passarlo alla funzione
-                const rObj = { id: r.id, title: r.title, notes: r.notes, date: r.date };
-                // Convertiamo in stringa sicura per l'HTML
-                const rString = JSON.stringify(rObj).replace(/"/g, '&quot;');
-
                 div.innerHTML = `
                     <div class="reminder-info">
                         <h3 style="${isOverdue ? 'color:var(--danger)' : ''}">${r.title}</h3>
                         <p>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
                     </div>
                     <div class="actions">
-                        <button class="btn-icon" onclick='downloadICS(${rString})' title="Aggiungi a Calendario">📅</button>
+                        <button class="btn-icon" onclick="shareICS(${r.id})" title="Calendario">📅</button>
                         <button class="btn-icon" style="color:var(--danger)" onclick="deleteReminder(${r.id})">&times;</button>
                     </div>
                 `;
@@ -332,71 +286,12 @@ END:VCALENDAR`;
             const year = calDate.getFullYear();
             const month = calDate.getMonth();
             document.getElementById('current-month-year').innerText = calDate.toLocaleDateString('it-IT', {month:'long', year:'numeric'});
+            
             const firstDay = new Date(year, month, 1).getDay();
-            const padDays = firstDay === 0 ? 6 : firstDay - 1;
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const pad = firstDay === 0 ? 6 : firstDay - 1;
+            const dim = new Date(year, month + 1, 0).getDate();
             const todayStr = new Date().toDateString();
 
-            for(let i=0; i<padDays; i++) grid.innerHTML += '<div></div>';
+            for(let i=0; i<pad; i++) grid.innerHTML += '<div></div>';
 
-            for(let d=1; d<=daysInMonth; d++) {
-                const hasEvent = reminders.some(r => !r.done && new Date(r.date).getDate() === d && new Date(r.date).getMonth() === month);
-                const isToday = new Date(year, month, d).toDateString() === todayStr;
-                const cell = document.createElement('div');
-                cell.className = `day-cell ${isToday ? 'today' : ''}`;
-                cell.innerHTML = `<div>${d}</div>${hasEvent ? '<span class="dot"></span>' : ''}`;
-                grid.appendChild(cell);
-            }
-        }
-
-        function playSound() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-            osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-        }
-
-        function triggerAlarm(r) {
-            if(document.getElementById('alarm-overlay').style.display !== 'flex') {
-                document.getElementById('alarm-text').innerText = r.title;
-                document.getElementById('alarm-desc').innerText = r.notes || "";
-                document.getElementById('alarm-overlay').style.display = 'flex';
-                currentAlarmId = r.id;
-                playSound();
-                alarmInterval = setInterval(playSound, 1000);
-            }
-            if (Notification.permission === "granted") {
-                new Notification("⏰ " + r.title, { body: r.notes || "È ora!", vibrate: [200, 100, 200] });
-            }
-        }
-
-        function stopAlarm() {
-            document.getElementById('alarm-overlay').style.display = 'none';
-            if(alarmInterval) clearInterval(alarmInterval);
-            reminders = reminders.filter(r => r.id !== currentAlarmId);
-            localStorage.setItem('myReminders', JSON.stringify(reminders));
-            renderList();
-            renderCalendar();
-        }
-
-        setInterval(() => {
-            const now = new Date();
-            reminders.forEach(r => { if(!r.done && new Date(r.date) <= now) triggerAlarm(r); });
-        }, 2000);
-
-        function openModal() {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('inp-date').value = now.toISOString().slice(0,16);
-            document.getElementById('add-modal').style.display = 'flex';
-        }
-        function closeModal() { document.getElementById('add-modal').style.display = 'none'; }
-        function switchView(v) {
+            for(let d=
