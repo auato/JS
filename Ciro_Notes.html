@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Alarmed Final</title>
+    <title>Alarmed Pro + Snooze</title>
     <style>
         :root {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
-            --primary: #00e5ff;
+            --primary: #00e5ff; /* Ciano */
             --danger: #ff4444;
+            --warning: #ffbb33;
             --text: #ffffff;
             --text-muted: #aaaaaa;
         }
@@ -21,37 +22,29 @@
             background-color: var(--bg-color);
             color: var(--text);
             margin: 0; padding: 0;
-            padding-bottom: 100px; /* Spazio per navbar */
+            padding-bottom: 100px;
+            user-select: none;
         }
 
-        /* Header */
+        /* --- HEADER & NAV --- */
         header {
-            background-color: var(--card-bg);
-            padding: 15px;
-            border-bottom: 1px solid #333;
-            position: sticky; top: 0; z-index: 1000;
+            background-color: var(--card-bg); padding: 15px;
+            border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
         }
         h1 { margin: 0; font-size: 1.2rem; }
         
-        button { cursor: pointer; }
+        button { cursor: pointer; font-family: inherit; }
 
         #btn-permission {
-            font-size: 0.8rem; background: var(--danger); border: none; color: white;
-            padding: 8px 12px; border-radius: 20px; font-weight: bold;
+            font-size: 0.75rem; background: var(--danger); border: none; color: white;
+            padding: 6px 12px; border-radius: 20px; font-weight: bold;
         }
 
-        /* Views */
-        .view { display: none; padding: 15px; max-width: 600px; margin: 0 auto; }
-        .view.active { display: block; }
-
-        /* Navbar */
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            background-color: var(--card-bg);
-            display: flex; justify-content: space-around;
-            padding: 15px 0; border-top: 1px solid #333;
-            z-index: 1000;
+            background-color: var(--card-bg); display: flex; justify-content: space-around;
+            padding: 15px 0; border-top: 1px solid #333; z-index: 1000;
             padding-bottom: env(safe-area-inset-bottom);
         }
         .nav-item {
@@ -60,19 +53,25 @@
         }
         .nav-item.active { color: var(--primary); }
 
-        /* Cards */
+        /* --- CARDS & LIST --- */
+        .view { display: none; padding: 15px; max-width: 600px; margin: 0 auto; }
+        .view.active { display: block; }
+
         .reminder-card {
             background-color: var(--card-bg); border-radius: 12px; padding: 15px;
             margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
             border-left: 4px solid var(--primary);
+            transition: transform 0.1s;
         }
+        .reminder-card:active { transform: scale(0.98); }
+        
         .reminder-info h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
         .reminder-info p { margin: 0; color: var(--text-muted); font-size: 0.85rem; }
         
-        .actions { display: flex; gap: 10px; }
-        .btn-icon { background: transparent; border: none; font-size: 1.5rem; padding: 5px; }
+        .actions { display: flex; gap: 15px; }
+        .btn-icon { background: transparent; border: none; font-size: 1.4rem; padding: 5px; }
 
-        /* FAB */
+        /* --- FAB & MODAL --- */
         .fab {
             position: fixed; bottom: 90px; right: 20px;
             background-color: var(--primary); color: #000;
@@ -82,7 +81,6 @@
             cursor: pointer; z-index: 999;
         }
 
-        /* Modal */
         #add-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.8); z-index: 2000;
@@ -101,7 +99,7 @@
         .btn-primary { background-color: var(--primary); color: #000; }
         .btn-cancel { background-color: transparent; border: 1px solid #555; color: #ccc; }
 
-        /* Calendar */
+        /* --- CALENDAR --- */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 15px; }
         .day-cell {
             background-color: #2a2a2a; min-height: 50px; padding: 5px;
@@ -110,12 +108,44 @@
         .day-cell.today { border: 1px solid var(--primary); }
         .dot { width: 6px; height: 6px; background-color: var(--primary); border-radius: 50%; display: inline-block; margin-top: 2px; }
 
-        /* Alarm Overlay */
+        /* --- NUOVO ALARM OVERLAY (SNOOZE STYLE) --- */
         #alarm-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--primary); z-index: 3000;
+            background-color: rgba(0, 0, 0, 0.95); /* Scuro elegante */
+            z-index: 3000;
             flex-direction: column; justify-content: center; align-items: center; text-align: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
         }
+
+        .alarm-content {
+            width: 100%; max-width: 350px;
+        }
+
+        .alarm-time { font-size: 4.5rem; font-weight: 200; color: white; margin: 0; line-height: 1; letter-spacing: -2px;}
+        .alarm-title { font-size: 1.5rem; color: var(--primary); margin: 20px 0 10px 0; font-weight: bold; }
+        .alarm-desc { color: #aaa; font-size: 1rem; margin-bottom: 40px; min-height: 20px;}
+
+        /* Pulsanti Snooze */
+        .snooze-label { color: #666; font-size: 0.8rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;}
+        .snooze-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 30px;
+        }
+        .btn-snooze {
+            background-color: #333; color: white; border: 1px solid #444;
+            padding: 15px 5px; border-radius: 12px; font-size: 1rem; font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-snooze:active { background-color: var(--primary); color: black; }
+
+        /* Pulsante Stop */
+        .btn-stop {
+            width: 100%; background-color: var(--danger); color: white;
+            padding: 18px; border-radius: 15px; font-size: 1.1rem; font-weight: bold;
+            border: none; 
+            box-shadow: 0 4px 20px rgba(255, 68, 68, 0.3);
+        }
+
     </style>
 </head>
 <body>
@@ -125,12 +155,12 @@
         <button id="btn-permission">Abilita Notifiche</button>
     </header>
 
-    <!-- View List -->
+    <!-- LIST VIEW -->
     <div id="view-list" class="view active">
         <div id="reminder-list"></div>
     </div>
 
-    <!-- View Calendar -->
+    <!-- CALENDAR VIEW -->
     <div id="view-calendar" class="view">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <button class="btn-icon" style="color:white" id="prev-month">◀</button>
@@ -140,21 +170,19 @@
         <div class="calendar-grid" id="calendar-grid"></div>
     </div>
 
-    <!-- FAB -->
     <div class="fab" id="fab-add">+</div>
 
-    <!-- Navbar -->
     <div class="nav-bar">
         <div class="nav-item active" id="nav-list">Lista</div>
         <div class="nav-item" id="nav-cal">Calendario</div>
     </div>
 
-    <!-- Add Modal -->
+    <!-- ADD MODAL -->
     <div id="add-modal">
         <div class="modal-content">
-            <h2>Nuovo</h2>
-            <input type="text" id="inp-title" placeholder="Titolo">
-            <textarea id="inp-notes" rows="3" placeholder="Note..."></textarea>
+            <h2>Nuovo Promemoria</h2>
+            <input type="text" id="inp-title" placeholder="Cosa devi fare?">
+            <textarea id="inp-notes" rows="3" placeholder="Note aggiuntive..."></textarea>
             <input type="datetime-local" id="inp-date">
             <div class="btn-group">
                 <button class="btn btn-cancel" id="btn-close-modal">Annulla</button>
@@ -163,42 +191,51 @@
         </div>
     </div>
 
-    <!-- Alarm Overlay -->
+    <!-- SNOOZE ALARM OVERLAY -->
     <div id="alarm-overlay">
-        <h1 style="font-size:3rem; color:black; margin-bottom:10px;">SVEGLIA!</h1>
-        <div id="alarm-text" style="color:black; font-size:1.5rem; margin-bottom:30px;"></div>
-        <button class="btn" style="background:black; color:white; max-width:200px;" id="btn-stop-alarm">STOP</button>
+        <div class="alarm-content">
+            <h1 class="alarm-time" id="alarm-clock">00:00</h1>
+            <div class="alarm-title" id="alarm-text">Titolo</div>
+            <div class="alarm-desc" id="alarm-desc">Note...</div>
+
+            <div class="snooze-label">Posticipa (Nag-me)</div>
+            <!-- Snooze Options Grid -->
+            <div class="snooze-grid">
+                <button class="btn-snooze" data-min="5">+5 min</button>
+                <button class="btn-snooze" data-min="15">+15 min</button>
+                <button class="btn-snooze" data-min="60">+1 ora</button>
+                <button class="btn-snooze" data-min="1440">+1 giorno</button>
+            </div>
+
+            <!-- Main Action -->
+            <button class="btn-stop" id="btn-stop-alarm">✓ FATTO (STOP)</button>
+        </div>
     </div>
 
     <script>
-        // Attende il caricamento completo prima di eseguire JS
         document.addEventListener('DOMContentLoaded', () => {
             
             // --- STATO ---
             let reminders = [];
-            try {
-                reminders = JSON.parse(localStorage.getItem('myReminders')) || [];
-            } catch(e) { reminders = []; }
+            try { reminders = JSON.parse(localStorage.getItem('myReminders')) || []; } catch(e) { reminders = []; }
             
             let calDate = new Date();
             let currentAlarmId = null;
             let audioCtx = null;
-            let alarmInterval = null;
+            let alarmLoop = null; // Per il loop audio
 
-            // --- RIFERIMENTI DOM ---
+            // --- DOM ELEMENTS ---
             const viewList = document.getElementById('view-list');
             const viewCal = document.getElementById('view-calendar');
             const navList = document.getElementById('nav-list');
             const navCal = document.getElementById('nav-cal');
-            const btnPerm = document.getElementById('btn-permission');
             const modal = document.getElementById('add-modal');
-            
-            // --- FUNZIONI UI ---
-            
+            const overlay = document.getElementById('alarm-overlay');
+
+            // --- RENDER LIST ---
             function renderList() {
                 const list = document.getElementById('reminder-list');
                 list.innerHTML = '';
-                
                 reminders.sort((a,b) => new Date(a.date) - new Date(b.date));
                 const active = reminders.filter(r => !r.done);
 
@@ -210,7 +247,6 @@
                 active.forEach(r => {
                     const d = new Date(r.date);
                     const isOverdue = new Date() > d;
-                    
                     const div = document.createElement('div');
                     div.className = 'reminder-card';
                     if(isOverdue) div.style.borderLeftColor = 'var(--danger)';
@@ -221,7 +257,7 @@
                             <p>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
                         </div>
                         <div class="actions">
-                            <button class="btn-icon" data-action="share" data-id="${r.id}" title="Calendario">📅</button>
+                            <button class="btn-icon" data-action="share" data-id="${r.id}">📅</button>
                             <button class="btn-icon" style="color:var(--danger)" data-action="delete" data-id="${r.id}">&times;</button>
                         </div>
                     `;
@@ -229,13 +265,11 @@
                 });
             }
 
+            // --- RENDER CALENDAR ---
             function renderCalendar() {
                 const grid = document.getElementById('calendar-grid');
                 grid.innerHTML = '';
-                
-                // Header Giorni
                 ['L','M','M','G','V','S','D'].forEach(d => grid.innerHTML += `<div style="text-align:center; font-size:0.7rem; color:#aaa;">${d}</div>`);
-
                 document.getElementById('current-month-year').innerText = calDate.toLocaleDateString('it-IT', {month:'long', year:'numeric'});
 
                 const year = calDate.getFullYear();
@@ -243,14 +277,12 @@
                 const firstDay = new Date(year, month, 1).getDay();
                 const pad = firstDay === 0 ? 6 : firstDay - 1;
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const todayStr = new Date().toDateString();
 
                 for(let i=0; i<pad; i++) grid.innerHTML += '<div></div>';
 
                 for(let d=1; d<=daysInMonth; d++) {
                     const hasEvent = reminders.some(r => !r.done && new Date(r.date).getDate() === d && new Date(r.date).getMonth() === month);
-                    const isToday = new Date(year, month, d).toDateString() === todayStr;
-
+                    const isToday = new Date(year, month, d).toDateString() === new Date().toDateString();
                     const cell = document.createElement('div');
                     cell.className = `day-cell ${isToday ? 'today' : ''}`;
                     cell.innerHTML = `<div>${d}</div>${hasEvent ? '<span class="dot"></span>' : ''}`;
@@ -258,36 +290,33 @@
                 }
             }
 
-            // --- GESTIONE EVENTI (DELEGATION) ---
-            // Usiamo un listener globale per la lista per evitare problemi di binding
+            // --- EVENT DELEGATION LISTA ---
             document.getElementById('reminder-list').addEventListener('click', (e) => {
                 const btn = e.target.closest('button');
                 if(!btn) return;
-                
-                const action = btn.dataset.action;
                 const id = parseInt(btn.dataset.id);
-
-                if(action === 'delete') {
-                    if(confirm("Eliminare?")) {
+                if(btn.dataset.action === 'delete') {
+                    if(confirm("Eliminare definitivamente?")) {
                         reminders = reminders.filter(r => r.id !== id);
-                        localStorage.setItem('myReminders', JSON.stringify(reminders));
-                        renderList();
-                        renderCalendar();
+                        save();
                     }
                 }
-                if(action === 'share') {
-                    handleShare(id);
-                }
+                if(btn.dataset.action === 'share') handleShare(id);
             });
 
+            function save() {
+                localStorage.setItem('myReminders', JSON.stringify(reminders));
+                renderList();
+                renderCalendar();
+            }
+
+            // --- FUNZIONALITÀ ICS / SHARE ---
             function handleShare(id) {
                 const r = reminders.find(x => x.id === id);
                 if(!r) return;
-                
                 const d = new Date(r.date);
                 const pad = n => n < 10 ? '0'+n : n;
                 const timeStr = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-                
                 const ics = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Alarmed//IT
@@ -305,43 +334,28 @@ DESCRIPTION:Reminder
 END:VALARM
 END:VEVENT
 END:VCALENDAR`;
-
-                const file = new File([ics], "evento.ics", { type: "text/calendar" });
-                
-                // Tentativo Condivisione Nativa Mobile
+                const file = new File([ics], "e.ics", { type: "text/calendar" });
                 if(navigator.canShare && navigator.canShare({ files: [file] })) {
-                    navigator.share({ files: [file], title: r.title }).catch(err => console.log(err));
+                    navigator.share({ files: [file], title: r.title }).catch(e=>{});
                 } else {
-                    // Fallback Download
-                    const url = URL.createObjectURL(file);
                     const a = document.createElement('a');
-                    a.href = url;
-                    a.download = "evento.ics";
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
+                    a.href = URL.createObjectURL(file);
+                    a.download = "e.ics";
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 }
             }
 
-            // --- CONTROLLI ---
-            
-            // Nav
+            // --- UI NAVIGATION ---
             navList.addEventListener('click', () => {
-                viewList.classList.add('active');
-                viewCal.classList.remove('active');
-                navList.classList.add('active');
-                navCal.classList.remove('active');
+                viewList.classList.add('active'); viewCal.classList.remove('active');
+                navList.classList.add('active'); navCal.classList.remove('active');
             });
-
             navCal.addEventListener('click', () => {
-                viewList.classList.remove('active');
-                viewCal.classList.add('active');
-                navList.classList.remove('active');
-                navCal.classList.add('active');
+                viewList.classList.remove('active'); viewCal.classList.add('active');
+                navList.classList.remove('active'); navCal.classList.add('active');
                 renderCalendar();
             });
 
-            // FAB & Modal
             document.getElementById('fab-add').addEventListener('click', () => {
                 const now = new Date();
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -349,104 +363,106 @@ END:VCALENDAR`;
                 modal.style.display = 'flex';
             });
 
-            document.getElementById('btn-close-modal').addEventListener('click', () => {
-                modal.style.display = 'none';
-            });
-
+            document.getElementById('btn-close-modal').addEventListener('click', () => modal.style.display='none');
             document.getElementById('btn-save').addEventListener('click', () => {
                 const title = document.getElementById('inp-title').value;
-                const notes = document.getElementById('inp-notes').value;
                 const dateVal = document.getElementById('inp-date').value;
-
-                if(!title || !dateVal) { alert("Inserisci Titolo e Data"); return; }
-
-                reminders.push({ id: Date.now(), title, notes, date: dateVal, done: false });
-                localStorage.setItem('myReminders', JSON.stringify(reminders));
+                if(!title || !dateVal) return alert("Manca dati");
+                reminders.push({ id: Date.now(), title, notes: document.getElementById('inp-notes').value, date: dateVal, done: false });
+                save();
                 modal.style.display = 'none';
-                renderList();
-                renderCalendar();
-
-                // Richiedi permessi se prima volta
-                if(Notification.permission === 'default') {
-                    Notification.requestPermission().then(res => updatePermBtn());
-                }
+                if(Notification.permission === 'default') Notification.requestPermission();
             });
 
-            // Calendar Controls
-            document.getElementById('prev-month').addEventListener('click', () => {
-                calDate.setMonth(calDate.getMonth() - 1);
-                renderCalendar();
-            });
-            document.getElementById('next-month').addEventListener('click', () => {
-                calDate.setMonth(calDate.getMonth() + 1);
-                renderCalendar();
-            });
+            document.getElementById('prev-month').addEventListener('click', () => { calDate.setMonth(calDate.getMonth()-1); renderCalendar(); });
+            document.getElementById('next-month').addEventListener('click', () => { calDate.setMonth(calDate.getMonth()+1); renderCalendar(); });
 
-            // Permissions
-            function updatePermBtn() {
-                if(!("Notification" in window)) { btnPerm.style.display = 'none'; return; }
-                if(Notification.permission === 'granted') {
-                    btnPerm.style.display = 'none';
-                } else {
-                    btnPerm.innerText = "Abilita Notifiche";
-                }
-            }
-            btnPerm.addEventListener('click', () => {
-                Notification.requestPermission().then(res => updatePermBtn());
-            });
-            updatePermBtn();
-
-            // --- ALARM LOOP ---
+            // --- AUDIO ENGINE (Bip Fastidioso) ---
             function playSound() {
                 if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                
-                osc.type = 'square';
+                // Tono crescente (sirena)
+                osc.type = 'sawtooth'; 
                 osc.frequency.setValueAtTime(440, audioCtx.currentTime);
                 osc.frequency.linearRampToValueAtTime(880, audioCtx.currentTime + 0.1);
-                
                 gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
                 gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-                
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.5);
             }
 
+            // --- ALARM LOOP ---
             setInterval(() => {
                 const now = new Date();
                 reminders.forEach(r => {
                     if(!r.done && new Date(r.date) <= now) {
-                        // Trigger
-                        if(document.getElementById('alarm-overlay').style.display !== 'flex') {
-                            document.getElementById('alarm-overlay').style.display = 'flex';
-                            document.getElementById('alarm-text').innerText = r.title;
+                        if(overlay.style.display !== 'flex') {
+                            // SCATTA L'ALLARME
                             currentAlarmId = r.id;
+                            overlay.style.display = 'flex';
+                            document.getElementById('alarm-text').innerText = r.title;
+                            document.getElementById('alarm-desc').innerText = r.notes || "";
+                            
+                            // Aggiorna orologio a schermo
+                            const updateClock = () => {
+                                const n = new Date();
+                                document.getElementById('alarm-clock').innerText = n.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                            };
+                            updateClock();
+                            
+                            // Inizia suono
                             playSound();
-                            alarmInterval = setInterval(playSound, 1000);
-                        }
-                        // System Notification
-                        if(Notification.permission === 'granted') {
-                            new Notification("SVEGLIA: " + r.title);
+                            alarmLoop = setInterval(playSound, 1500); // Bip ogni 1.5 secondi
                         }
                     }
                 });
             }, 2000);
 
+            function stopAudio() {
+                if(alarmLoop) clearInterval(alarmLoop);
+                overlay.style.display = 'none';
+            }
+
+            // --- PULSANTE STOP/FATTO ---
             document.getElementById('btn-stop-alarm').addEventListener('click', () => {
-                document.getElementById('alarm-overlay').style.display = 'none';
-                if(alarmInterval) clearInterval(alarmInterval);
-                
-                // Remove
+                stopAudio();
+                // Elimina definitivamente (o potresti segnarlo come fatto)
                 reminders = reminders.filter(r => r.id !== currentAlarmId);
-                localStorage.setItem('myReminders', JSON.stringify(reminders));
-                renderList();
-                renderCalendar();
+                save();
             });
 
-            // Inizializzazione
+            // --- PULSANTI SNOOZE (Delegation) ---
+            document.querySelectorAll('.btn-snooze').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    stopAudio();
+                    const mins = parseInt(e.target.dataset.min);
+                    
+                    // Trova il reminder che sta suonando
+                    const rIndex = reminders.findIndex(r => r.id === currentAlarmId);
+                    if(rIndex !== -1) {
+                        // Calcola nuova data
+                        const now = new Date();
+                        now.setMinutes(now.getMinutes() + mins);
+                        // Fix Timezone per input datetime-local
+                        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                        
+                        // Aggiorna la data del reminder (NON lo cancella)
+                        reminders[rIndex].date = now.toISOString().slice(0,16);
+                        save();
+                        // alert(`Posticipato di ${mins} minuti`); // Opzionale
+                    }
+                });
+            });
+
+            // Permission Button logic
+            const btnP = document.getElementById('btn-permission');
+            if(!("Notification" in window) || Notification.permission==='granted') btnP.style.display='none';
+            btnP.addEventListener('click', ()=>Notification.requestPermission().then(p=>{if(p==='granted')btnP.style.display='none'}));
+
+            // Init
             renderList();
         });
     </script>
