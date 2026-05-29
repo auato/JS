@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Tracker Pro — Dashboard Evoluta</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+/* ── Design System ────────────────────────────────────────────── */
+:root {
+  --bg: #f5f5f0; --surf: #ffffff; --surfoff: #f8f7f4;
+  --brd: #e2e0db; --div: #ece9e4;
+  --txt: #1a1814; --muted: #716e69;
+  --pri: #059669; --cp: #2563eb; --ck: #f97316;
+}
+[data-theme="dark"] {
+  --bg: #0f1012; --surf: #181a1d; --surfoff: #1f2226;
+  --brd: #2d3136; --div: #25282c;
+  --txt: #ececec; --muted: #a1a1a1;
+}
+body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 1.5rem; transition: background 0.3s; }
+.container { max-width: 1100px; margin: 0 auto; }
+header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+.card { background: var(--surf); border: 1px solid var(--brd); border-radius: 1.25rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.chart-wrap { background: var(--surf); border: 1px solid var(--brd); border-radius: 1.25rem; padding: 1.5rem; height: 500px; margin-bottom: 1.5rem; }
+.table-wrap { background: var(--surf); border: 1px solid var(--brd); border-radius: 1.25rem; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th { background: var(--surfoff); padding: 1rem; text-align: left; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--div); }
+.btn { border: none; padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+.btn-p { background: var(--pri); color: white; }
+.btn-s { background: var(--surfoff); color: var(--txt); border: 1px solid var(--brd); }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; }
+.modal.show { display: flex; }
+.modal-content { background: var(--surf); padding: 2rem; border-radius: 1.5rem; width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+input, select { width: 100%; padding: 0.75rem; border-radius: 0.6rem; border: 1px solid var(--brd); background: var(--bg); color: var(--txt); margin-top: 0.5rem; font-family: inherit; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+        <h1 style="margin:0; font-size: 1.5rem;">Gestione Flotta</h1>
+        <p style="margin:0; color:var(--muted); font-size: 0.9rem;">Analisi scadenze 15.000 km / 1 Anno</p>
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+        <button class="btn btn-s" onclick="toggleTheme()">Tema</button>
+        <button class="btn btn-p" onclick="openModal()">+ Nuova Lettura</button>
+    </div>
+  </header>
+
+  <div class="grid" id="car-cards"></div>
+  <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+  
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Auto</th><th>Data</th><th>Km</th><th>Tipo</th><th>Azioni</th></tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal" id="entry-modal">
+  <div class="modal-content">
+    <h3 id="modal-title" style="margin-top:0">Aggiungi Dati</h3>
+    <input type="hidden" id="edit-index">
+    <input type="hidden" id="edit-car-id">
+    <div style="margin-bottom: 1rem">
+      <label class="stat-lbl" style="font-size:0.8rem; font-weight:bold; color:var(--muted)">Veicolo</label>
+      <select id="f-car">
+          <option value="picanto">KIA Picanto</option>
+          <option value="prius">Toyota Prius</option>
+      </select>
+    </div>
+    <div style="margin-bottom: 1rem">
+      <label class="stat-lbl" style="font-size:0.8rem; font-weight:bold; color:var(--muted)">Chilometraggio</label>
+      <input type="number" id="f-km">
+    </div>
+    <div style="margin-bottom: 1rem">
+      <label class="stat-lbl" style="font-size:0.8rem; font-weight:bold; color:var(--muted)">Data</label>
+      <input type="date" id="f-date">
+    </div>
+    <div style="margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem">
+      <input type="checkbox" id="f-tagliando" style="width:auto; margin:0"> 
+      <label style="font-size:0.9rem">Segna come Tagliando</label>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem">
+      <button class="btn btn-p" onclick="saveEntry()">Salva</button>
+      <button class="btn btn-s" onclick="closeModal()">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// 1. DATI STORICI ESATTI
+const DEFAULT_DB = {
+  picanto: {
+    id: 'picanto', name: 'KIA Picanto', color: '#f97316', emoji: '🚙',
+    limitKm: 15000, limitYr: 1,
+    readings: [
+      { date: '2025-04-01', km: 0, type: 'Tagliando' },
+      { date: '2025-11-13', km: 10505, type: 'Tagliando' },
+      { date: '2026-04-11', km: 15014, type: 'Rilevazione' }
+    ]
+  },
+  prius: {
+    id: 'prius', name: 'Toyota Prius', color: '#2563eb', emoji: '🚗',
+    limitKm: 15000, limitYr: 1,
+    readings: [
+      { date: '2026-01-05', km: 5220, type: 'Tagliando' },
+      { date: '2026-04-11', km: 9842, type: 'Rilevazione' }
+    ]
+  }
+};
+
+// Sicurezza: try/catch per evitare crash se il localStorage è corrotto
+let db;
+try {
+    db = JSON.parse(localStorage.getItem('car_db_v7')) || DEFAULT_DB;
+} catch(e) {
+    db = DEFAULT_DB;
+}
+let chart = null;
+
+// 2. LOGICA MATEMATICA (Sicura)
+function getLinReg(readings) {
+  const n = readings.length;
+  if (n < 2) return null;
+  let sx=0, sy=0, sxy=0, sx2=0;
+  readings.forEach(r => {
+    const x = new Date(r.date).getTime() / 86400000;
+    const y = r.km;
+    sx+=x; sy+=y; sxy+=x*y; sx2+=x*x;
+  });
+  const denom = (n*sx2 - sx*sx);
+  if (denom === 0) return null; // Previene divisioni per zero
+  const m = (n*sxy - sx*sy) / denom;
+  const b = (sy - m*sx) / n;
+  return { m, b };
+}
+
+// 3. UI RENDERING
+function refresh() {
+  localStorage.setItem('car_db_v7', JSON.stringify(db));
+  renderCards();
+  renderTable();
+  updateChart();
+}
+
+function renderCards() {
+  const container = document.getElementById('car-cards');
+  container.innerHTML = '';
+  Object.values(db).forEach(car => {
+    const sorted = [...car.readings].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    
+    // Sostituito .at(-1) per massima compatibilità con vecchi browser
+    const cur = sorted.length > 0 ? sorted[sorted.length - 1] : null; 
+    const kmStr = cur ? cur.km.toLocaleString() : '0';
+    const dateStr = cur ? new Date(cur.date).toLocaleDateString() : '--/--/----';
+
+    container.innerHTML += `
+      <div class="card">
+        <div style="color:var(--muted); font-size:0.75rem; text-transform:uppercase; font-weight:700">${car.emoji} ${car.name}</div>
+        <div style="font-size:2rem; font-weight:700; margin:0.5rem 0">${kmStr} <span style="font-size:1rem; font-weight:400; color:var(--muted)">km</span></div>
+        <div style="font-size:0.85rem; color:var(--muted)">Ultima lettura: ${dateStr}</div>
+      </div>`;
+  });
+}
+
+function renderTable() {
+  const body = document.getElementById('table-body');
+  body.innerHTML = '';
+  Object.values(db).forEach(car => {
+    const sortedReadings = [...car.readings].sort((a,b) => new Date(b.date) - new Date(a.date));
+    sortedReadings.forEach((r) => {
+      const originalIdx = car.readings.indexOf(r);
+      body.innerHTML += `
+        <tr>
+          <td><strong>${car.name}</strong></td>
+          <td>${new Date(r.date).toLocaleDateString('it-IT')}</td>
+          <td>${r.km.toLocaleString()} km</td>
+          <td><span style="color:${r.type==='Tagliando'?'var(--pri)':'var(--muted)'}; font-weight:600">${r.type}</span></td>
+          <td>
+            <button class="btn btn-s" onclick="editEntry('${car.id}', ${originalIdx})" title="Modifica">✏️</button>
+            <button class="btn btn-s" onclick="deleteEntry('${car.id}', ${originalIdx})" style="color:#ef4444" title="Elimina">🗑️</button>
+          </td>
+        </tr>`;
+    });
+  });
+}
+
+function updateChart() {
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  if (chart) chart.destroy();
+
+  const datasets = [];
+  const today = new Date();
+
+  Object.values(db).forEach(car => {
+    const readings = [...car.readings].sort((a,b) => new Date(a.date) - new Date(b.date));
+    if (readings.length === 0) return; // Sicurezza se l'auto non ha dati
+
+    const lastSvc = [...readings].reverse().find(r => r.type === 'Tagliando');
+    const reg = getLinReg(readings);
+    const lastReading = readings[readings.length - 1]; // Compatibilità massima
+
+    // 1. Dati Storici Reali
+    datasets.push({
+      label: `${car.name}`,
+      data: readings.map(r => ({ x: new Date(r.date), y: r.km })),
+      borderColor: car.color,
+      backgroundColor: car.color,
+      pointRadius: 5,
+      pointHitRadius: 10,
+      tension: 0.1
+    });
+
+    // Disegna la previsione solo se ha senso matematicamente (reg.m > 0)
+    if (reg && lastSvc && reg.m > 0) {
+      const targetKmVal = lastSvc.km + car.limitKm;
+      const targetDateVal = new Date(lastSvc.date);
+      targetDateVal.setFullYear(targetDateVal.getFullYear() + car.limitYr);
+
+      const dateAt15k = new Date(((targetKmVal - reg.b) / reg.m) * 86400000);
+      const kmAtOneYear = reg.m * (targetDateVal.getTime() / 86400000) + reg.b;
+      const farDate = dateAt15k > targetDateVal ? dateAt15k : targetDateVal;
+      
+      const trendData = [];
+      const startT = new Date(lastReading.date).getTime();
+      const endT = farDate.getTime();
+      const steps = Math.min(Math.max((endT - startT) / (86400000 * 5), 10), 80); 
+      const stepTime = (endT - startT) / steps;
+
+      for(let i = 0; i <= steps; i++) {
+         const t = startT + (stepTime * i);
+         trendData.push({ x: new Date(t), y: reg.m * (t / 86400000) + reg.b });
+      }
+
+      // 2. Linea di Trend tratteggiata INTERATTIVA
+      datasets.push({
+        label: `Trend ${car.name}`,
+        data: trendData,
+        borderColor: car.color,
+        borderDash: [6, 6],
+        borderWidth: 2,
+        pointRadius: 0, 
+        pointHitRadius: 25, 
+        pointHoverRadius: 7, 
+        pointHoverBackgroundColor: car.color,
+        pointHoverBorderColor: '#ffffff',
+        pointHoverBorderWidth: 2.5,
+        fill: false,
+        isRegression: true 
+      });
+
+      // 3. Marker 15k (Triangolo Verde)
+      datasets.push({
+        label: `Target 15k (${car.name})`,
+        data: [{ x: dateAt15k, y: targetKmVal }],
+        backgroundColor: '#10b981', pointStyle: 'triangle', pointRadius: 10, pointHitRadius: 10, showLine: false
+      });
+
+      // 4. Marker Tempo (Rombo Giallo)
+      datasets.push({
+        label: `Target 1 Anno (${car.name})`,
+        data: [{ x: targetDateVal, y: kmAtOneYear }],
+        backgroundColor: '#f59e0b', pointStyle: 'rectRot', pointRadius: 10, pointHitRadius: 10, showLine: false
+      });
+    }
+  });
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { 
+          mode: 'nearest', 
+          intersect: true,
+          axis: 'xy'
+      },
+      animation: { duration: 300 },
+      hover: { animationDuration: 300 },
+      scales: {
+        x: { 
+          type: 'time', 
+          time: { unit: 'month' }, 
+          grid: { display: true, color: 'rgba(0,0,0,0.05)', lineWidth: 1 },
+          ticks: { autoSkip: true, maxTicksLimit: 20 }
+        },
+        y: { 
+          beginAtZero: false, 
+          grid: { color: 'rgba(0,0,0,0.05)', lineWidth: 1 } 
+        }
+      },
+      plugins: {
+        // Legenda pulita: nasconde i target/trend
+        legend: { 
+            position: 'bottom', 
+            labels: { 
+                usePointStyle: true, 
+                boxWidth: 8, 
+                font: {family: 'Satoshi', weight: 'bold'},
+                filter: function(item) {
+                    if (item && item.text) {
+                        return !item.text.includes('Trend') && !item.text.includes('Target');
+                    }
+                    return true;
+                }
+            } 
+        },
+        annotation: {
+          annotations: {
+            lineToday: {
+              type: 'line',
+              xMin: today.getTime(), xMax: today.getTime(),
+              borderColor: 'rgba(150, 150, 150, 0.4)', borderWidth: 1.5, borderDash: [6, 6],
+              label: {
+                display: true, content: 'OGGI', position: 'start',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)', color: '#888', font: { size: 10, weight: 'bold' }
+              }
+            }
+          }
+        },
+        tooltip: {
+          enabled: true,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          titleColor: '#1a1814',
+          bodyColor: '#1a1814',
+          borderColor: '#e2e0db',
+          borderWidth: 1,
+          padding: 12,
+          usePointStyle: true,
+          callbacks: {
+            title: (items) => {
+                return new Date(items[0].parsed.x).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            },
+            label: (item) => {
+                const isReg = item.dataset.isRegression;
+                const val = Math.round(item.parsed.y).toLocaleString();
+                if (isReg) return ` 🔮 Proiezione: ${val} km`;
+                let labelName = item.dataset.label || '';
+                labelName = labelName.replace(/Target 15k \((.*?)\)/, '$1').replace(/Target 1 Anno \((.*?)\)/, '$1');
+                return ` ${labelName}: ${val} km`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── FUNZIONI CRUD ──────────────────────────────────────────────
+function openModal(carId = 'picanto', idx = null) {
+  const modal = document.getElementById('entry-modal');
+  if (idx !== null) {
+    const r = db[carId].readings[idx];
+    document.getElementById('f-car').value = carId;
+    document.getElementById('f-car').disabled = true;
+    document.getElementById('f-km').value = r.km;
+    document.getElementById('f-date').value = r.date;
+    document.getElementById('f-tagliando').checked = (r.type === 'Tagliando');
+    document.getElementById('edit-index').value = idx;
+    document.getElementById('edit-car-id').value = carId;
+    document.getElementById('modal-title').innerText = "Modifica Lettura";
+  } else {
+    document.getElementById('f-car').disabled = false;
+    document.getElementById('f-km').value = '';
+    document.getElementById('f-date').valueAsDate = new Date();
+    document.getElementById('f-tagliando').checked = false;
+    document.getElementById('edit-index').value = '';
+    document.getElementById('edit-car-id').value = '';
+    document.getElementById('modal-title').innerText = "Nuova Lettura";
+  }
+  modal.classList.add('show');
+}
+
+function closeModal() { document.getElementById('entry-modal').classList.remove('show'); }
+
+function saveEntry() {
+  const carId = document.getElementById('f-car').value;
+  const km = parseInt(document.getElementById('f-km').value);
+  const date = document.getElementById('f-date').value;
+  const type = document.getElementById('f-tagliando').checked ? 'Tagliando' : 'Rilevazione';
+  const idx = document.getElementById('edit-index').value;
+  const oldCarId = document.getElementById('edit-car-id').value;
+
+  if (isNaN(km) || !date) return alert("Inserisci dati validi.");
+
+  const entry = { date, km, type };
+
+  if (idx !== '') {
+    db[oldCarId].readings[idx] = entry;
+  } else {
+    db[carId].readings.push(entry);
+  }
+  
+  refresh();
+  closeModal();
+}
+
+function editEntry(id, idx) { openModal(id, idx); }
+
+function deleteEntry(id, idx) {
+  if (confirm("Sei sicuro di voler eliminare questo record?")) {
+    db[id].readings.splice(idx, 1);
+    refresh();
+  }
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  updateChart();
+}
+
+refresh();
+</script>
+</body>
+</html>
