@@ -276,6 +276,33 @@ function updateChart() {
     }
   });
 
+// --- INIZIO BLOCCO LEGENDA AGGIORNATO ---
+  // 1. Spaziatore invisibile per creare il distacco visivo
+  datasets.push({
+    label: '      ', // Spazi vuoti
+    data: [],
+    backgroundColor: 'rgba(0,0,0,0)', // Colore trasparente
+    pointStyle: 'circle',
+    borderWidth: 0
+  });
+
+  // 2. Simboli fittizi
+  datasets.push({
+    label: `Limite 15.000 km`,
+    data: [],
+    backgroundColor: '#10b981',
+    pointStyle: 'triangle',
+    borderWidth: 0
+  });
+  datasets.push({
+    label: `Scadenza 1 Anno`,
+    data: [],
+    backgroundColor: '#f59e0b',
+    pointStyle: 'rectRot',
+    borderWidth: 0
+  });
+  // --- FINE BLOCCO LEGENDA AGGIORNATO ---
+
   chart = new Chart(ctx, {
     type: 'line',
     data: { datasets },
